@@ -1,0 +1,147 @@
+# Daily News Workflow 配置
+# 游戏研究 + 技术哲学 + 叙事学 + 媒介批判 + 控制论 + 交互式文献学
+
+obsidian:
+  vault_path: "/Users/sunjinghe/Library/Mobile Documents/iCloud~md~obsidian/Documents/Obsidian Vault"
+  output_folder: "Research Feed"
+  pdf_folder: "Research Feed/Papers"
+
+# 搜索关键词（新闻搜索）
+search_keywords:
+  en:
+    - "game narrative"
+    - "ludology"
+    - "AI game"
+    - "game art"
+    - "cybernetics games"
+    - "interactive literature"
+  zh:
+    - "游戏叙事"
+    - "游戏研究"
+    - "人工智能游戏"
+    - "游戏开发"
+    - "控制论 游戏"
+    - "交互式文学"
+
+# 学术论文搜索关键词
+academic_keywords:
+  # 技术与工程类（arXiv + DBLP）- 精简，避免过多纯技术
+  tech:
+    - "game AI"
+    - "procedural content generation"
+    - "game engine"
+    - "virtual reality game"
+  # 人文艺术与媒介理论类（CrossRef + Semantic Scholar）- 重点扩展
+  humanities:
+    # 游戏研究核心
+    - "game studies ludology"
+    - "interactive storytelling narrative"
+    - "media theory video game"
+    - "procedural rhetoric"
+    - "game history"
+    - "narratology game"
+    # 媒介理论与批评
+    - "media archaeology"
+    - "digital media theory"
+    - "new media art"
+    - "electronic literature"
+    - "hypertext fiction"
+    # 控制论与系统论
+    - "cybernetics history"
+    - "systems theory"
+    - "autopoiesis"
+    - "feedback loop"
+    # 交互式文学与数字人文
+    - "interactive fiction"
+    - "digital humanities"
+    - "computational narrative"
+    - "game narratology"
+    # 游戏艺术与美学
+    - "game art aesthetics"
+    - "game sound design"
+    - "game worldbuilding"
+    # 跨媒体与 IP
+    - "transmedia storytelling"
+    - "media franchising"
+    - "game adaptation"
+  # 中文论文（CrossRef 中文搜索）
+  zh:
+    - "游戏叙事"
+    - "游戏研究"
+    - "人机交互 游戏"
+    - "媒介理论 游戏"
+    - "数字人文 游戏"
+    - "控制论"
+    - "交互式文学"
+    - "电子文学"
+    - "游戏史"
+    - "跨媒体叙事"
+
+# RSS 订阅源
+rss_feeds:
+  # ========== 学术 - 人文艺术类（优先） ==========
+  - name: "Game Studies (丹麦)"
+    url: "https://gamestudies.org/160.xml"
+  - name: "Games and Culture (SAGE)"
+    url: "https://journals.sagepub.com/action/gsaRSS?journalName=Games+and+Culture"
+  - name: "Digital Games Research Association (DiGRA)"
+    url: "https://digra.org/publications/digra-journal/rss"
+  - name: "ACM Computers in Entertainment"
+    url: "https://dl.acm.org/action/doSearch?AllField=games+OR+ludology&startPage=0&pageSize=20"
+
+  # ========== 人文艺术类 RSS（新增） ==========
+  - name: "The New York Times - Arts"
+    url: "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
+  - name: "The Atlantic - Technology"
+    url: "https://www.theatlantic.com/feed/all/"
+  - name: "MIT Technology Review"
+    url: "https://www.technologyreview.com/feed/"
+  - name: "Wired - Culture"
+    url: "https://www.wired.com/feed/category/culture/latest/rss"
+
+  # ========== 学术 - 技术类（平衡配置） ==========
+  - name: "arXiv CS - HCI"
+    url: "https://export.arxiv.org/rss/cs/hc"
+  - name: "arXiv CS - AI"
+    url: "https://export.arxiv.org/rss/cs/ai"
+  - name: "IEEE Transactions on Games"
+    url: "https://ieeexplore.ieee.org/rss/searchres.jsp?newsearch=true&action=createRSS&contentType=article&returnType=search&matchBoolean=true&searchField=All&queryText=games+OR+ludology+OR+narratology&size=50"
+
+  # ========== 新闻 - 国际游戏媒体 ==========
+  - name: "Hacker News Top"
+    url: "https://hnrss.org/newest?points=100"
+  - name: "Game Developer"
+    url: "https://www.gamedeveloper.com/rss.xml"
+  - name: "GamesIndustry.biz"
+    url: "https://www.gamesindustry.biz/rss"
+  - name: "The Verge - Gaming"
+    url: "https://www.theverge.com/rss/gaming/index.xml"
+
+  # ========== 新闻 - 国内游戏媒体 ==========
+  - name: "36Kr 游戏资讯"
+    url: "https://36kr.com/feed"
+  - name: "触乐"
+    url: "https://www.chuapp.com/rss"
+  - name: "游戏葡萄"
+    url: "https://youxiputao.com/rss"
+
+# 工作流配置
+workflow:
+  collect:
+    max_news_per_source: 10
+    max_papers_per_journal: 5
+    search_results_per_keyword: 5
+    timeout_seconds: 30
+
+  review:
+    min_quality_score: 0.5
+    min_relevance_score: 0.3
+    # 图形学/理工类论文配额
+    max_cs_graphics_per_batch: 4
+
+  output:
+    max_items_per_report: 50
+    include_pdf_download: true
+
+# 定时运行
+schedule: "0 8 * * *"

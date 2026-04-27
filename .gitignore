@@ -1,0 +1,23 @@
+# 依赖
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.log
+*.tmp
+raw_data/
