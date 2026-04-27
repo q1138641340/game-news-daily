@@ -86,44 +86,32 @@ rss_feeds:
     url: "https://journals.sagepub.com/action/gsaRSS?journalName=Games+and+Culture"
   - name: "Digital Games Research Association (DiGRA)"
     url: "https://digra.org/publications/digra-journal/rss"
-  - name: "ACM Computers in Entertainment"
-    url: "https://dl.acm.org/action/doSearch?AllField=games+OR+ludology&startPage=0&pageSize=20"
 
-  # ========== 人文艺术类 RSS（新增） ==========
+  # ========== 人文艺术类 RSS（重点维护） ==========
   - name: "The New York Times - Arts"
     url: "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
-  - name: "The Atlantic - Technology"
-    url: "https://www.theatlantic.com/feed/all/"
   - name: "MIT Technology Review"
     url: "https://www.technologyreview.com/feed/"
   - name: "Wired - Culture"
     url: "https://www.wired.com/feed/category/culture/latest/rss"
+  - name: "The Verge"
+    url: "https://www.theverge.com/rss/index.xml"
 
-  # ========== 学术 - 技术类（平衡配置） ==========
-  - name: "arXiv CS - HCI"
-    url: "https://export.arxiv.org/rss/cs/hc"
+  # ========== 学术 - 技术类（arXiv 新格式） ==========
   - name: "arXiv CS - AI"
-    url: "https://export.arxiv.org/rss/cs/ai"
-  - name: "IEEE Transactions on Games"
-    url: "https://ieeexplore.ieee.org/rss/searchres.jsp?newsearch=true&action=createRSS&contentType=article&returnType=search&matchBoolean=true&searchField=All&queryText=games+OR+ludology+OR+narratology&size=50"
+    url: "https://arxiv.org/rss/cs.AI"
+  - name: "arXiv CS - HCI"
+    url: "https://arxiv.org/rss/cs.HC"
+  - name: "arXiv CS - Games"
+    url: "https://arxiv.org/rss/cs.GT"
 
   # ========== 新闻 - 国际游戏媒体 ==========
-  - name: "Hacker News Top"
-    url: "https://hnrss.org/newest?points=100"
-  - name: "Game Developer"
-    url: "https://www.gamedeveloper.com/rss.xml"
   - name: "GamesIndustry.biz"
-    url: "https://www.gamesindustry.biz/rss"
-  - name: "The Verge - Gaming"
-    url: "https://www.theverge.com/rss/gaming/index.xml"
+    url: "https://www.gamesindustry.biz/feed"
 
   # ========== 新闻 - 国内游戏媒体 ==========
   - name: "36Kr 游戏资讯"
     url: "https://36kr.com/feed"
-  - name: "触乐"
-    url: "https://www.chuapp.com/rss"
-  - name: "游戏葡萄"
-    url: "https://youxiputao.com/rss"
 
 # 工作流配置
 workflow:

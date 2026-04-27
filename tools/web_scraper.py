@@ -162,11 +162,21 @@ class WebScraper:
 
 
 class NewsSearcher:
-    """新闻搜索（Google News RSS，免费稳定）"""
+    """新闻搜索（Google News RSS，通过代理稳定抓取）"""
+
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': (
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/120.0.0.0 Safari/537.36'
+            )
+        })
 
     def search_news(self, keywords: list[str], max_results: int = 5) -> list[dict]:
         """
-        通过 Google News RSS 搜索新闻
+        通过 Google News RSS 搜索新闻（通过代理抓取）
 
         Args:
             keywords: 关键词列表
@@ -190,7 +200,10 @@ class NewsSearcher:
                     # 中文关键词用中文版
                     url = f"https://news.google.com/rss/search?q={encoded}&hl=zh-CN&gl=CN&ceid=CN:zh-Hans"
 
-                feed = feedparser.parse(url)
+                # 用 requests 抓取（支持代理），再传给 feedparser 解析
+                resp = self.session.get(url, timeout=15)
+                resp.raise_for_status()
+                feed = feedparser.parse(resp.text)
 
                 count = 0
                 for entry in feed.entries:

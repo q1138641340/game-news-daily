@@ -168,7 +168,7 @@ def main():
         content=report_content,
         date=today,
         tags=tags[:20],  # 限制标签数量
-        failed_papers=download_results.get("failed", []) if papers_with_pdf else []
+        failed_papers=[]
     )
     print(f"  Daily report saved: {report_path}")
 
@@ -187,6 +187,18 @@ def main():
 
         print(f"    Downloaded: {len(download_results['downloaded'])}")
         print(f"    Failed: {len(download_results['failed'])}")
+
+        # 如果有下载失败的，更新日报追加失败列表
+        if download_results.get("failed"):
+            report_content_updated = report_content + writer._format_failed_papers(download_results["failed"], today)
+            # 覆盖写入（带 failed_papers）
+            writer.write_daily_report(
+                content=report_content_updated,
+                date=today,
+                tags=tags[:20],
+                failed_papers=download_results["failed"]
+            )
+            print(f"  Updated report with failed downloads")
 
         # 下载失败的不再单独写文件，已整合进日报
 

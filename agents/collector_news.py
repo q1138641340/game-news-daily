@@ -66,7 +66,7 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
         return cleaned
 
     def _collect_rss(self) -> list[dict]:
-        """从RSS订阅源收集"""
+        """从RSS订阅源收集（通过代理抓取）"""
         feeds = self.config.get("rss_feeds", [])
         max_per_source = self.config.get("workflow", {}).get("collect", {}).get("max_news_per_source", 10)
 
@@ -75,7 +75,10 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
 
         for feed_config in feeds:
             try:
-                feed = feedparser.parse(feed_config["url"])
+                # 用 scraper 的 session 抓取（支持代理），再传给 feedparser 解析
+                resp = self.scraper.session.get(feed_config["url"], timeout=self.scraper.timeout)
+                resp.raise_for_status()
+                feed = feedparser.parse(resp.text)
                 count = 0
                 for entry in feed.entries:
                     if count >= max_per_source:
