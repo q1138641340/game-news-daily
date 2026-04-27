@@ -6,6 +6,9 @@
 from datetime import datetime
 from typing import Optional
 from tools.llm import get_format_deepseek
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class FormatterAgent:
@@ -164,7 +167,7 @@ Top 3 必读条目：
         }
 
         # 调用 LLM 生成报告
-        print(f"  生成日报: {len(papers)} 篇论文 + {len(news)} 条新闻...")
+        logger.info(f"  生成日报: {len(papers)} 篇论文 + {len(news)} 条新闻...")
 
         try:
             report = self.llm.chat(
@@ -176,7 +179,7 @@ Top 3 必读条目：
             )
             return report
         except Exception as e:
-            print(f"  [LLM生成失败]: {e}")
+            logger.warning(f"  [LLM生成失败]: {e}")
             return self._fallback_report(papers, news)
 
     def _empty_report(self) -> str:

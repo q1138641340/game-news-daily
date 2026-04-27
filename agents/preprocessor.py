@@ -5,6 +5,9 @@
 
 from tools.llm import get_collect_deepseek, get_collect_minimax
 from tools.json_parser import parse_json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PreprocessorAgent:
@@ -72,7 +75,7 @@ class PreprocessorAgent:
         Returns:
             添加了 clean_content 字段的条目列表
         """
-        print(f"  预处理 {len(items)} 条内容...")
+        logger.info(f"  预处理 {len(items)} 条内容...")
 
         for i, item in enumerate(items):
             try:
@@ -114,14 +117,14 @@ class PreprocessorAgent:
                 item["clean_content"] = markdown
 
             except Exception as e:
-                print(f"    [预处理失败] {item.get('title', '')[:30]}: {e}")
+                logger.warning(f"    [预处理失败] {item.get('title', '')[:30]}: {e}")
                 # 保留原始摘要作为备用
                 item["clean_content"] = item.get("summary", "")
 
         # 过滤掉没有有效内容的条目
         valid = [item for item in items if item.get("clean_content")]
 
-        print(f"  预处理完成，有效内容 {len(valid)}/{len(items)} 条")
+        logger.info(f"  预处理完成，有效内容 {len(valid)}/{len(items)} 条")
         return valid
 
     def _llm_refine(self, text: str, item: dict) -> str:
@@ -145,6 +148,7 @@ class PreprocessorAgent:
             )
             return result
         except Exception:
+            logger.warning("    [MiniMax精炼失败，尝试DeepSeek]")
             pass
 
         # 备用 DeepSeek
@@ -158,6 +162,7 @@ class PreprocessorAgent:
             )
             return result
         except Exception:
+            logger.warning("    [DeepSeek也失败，保留本地处理结果]")
             # LLM 失败时，保留本地处理结果
             return text
 
@@ -188,5 +193,6 @@ class PreprocessorAgent:
                 if start > 8 and end > start:
                     return text[start:end].strip()
         except Exception:
+            logger.warning(f"    [arXiv API获取失败] {arxiv_id}")
             pass
         return ""

@@ -21,3 +21,6 @@ Thumbs.db
 *.log
 *.tmp
 raw_data/
+
+# 输出目录（本地运行时生成，GitHub Actions 推送到 daily-reports 分支）
+output/

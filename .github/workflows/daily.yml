@@ -8,18 +8,25 @@ on:
   # 允许手动触发
   workflow_dispatch:
 
+env:
+  PYTHON_VERSION: '3.11'
+  OUTPUT_BRANCH: 'daily-reports'
+
 jobs:
   run-workflow:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
       - name: Install dependencies
@@ -36,14 +43,60 @@ jobs:
           GLM_BASE_URL: ${{ secrets.GLM_BASE_URL }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          KIMI_BASE_URL: ${{ secrets.KIMI_BASE_URL }}
+          MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          MINIMAX_BASE_URL: ${{ secrets.MINIMAX_BASE_URL }}
           GITHUB_ACTIONS: "true"
-          OBSIDIAN_VAULT_PATH: ""
-        run: python main.py
+        run: |
+          python main.py 2>&1 | tee output/workflow.log
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-report-${{ github.run_id }}
+          path: |
+            output/
+            !output/papers/*.pdf
+          retention-days: 7
 
       - name: Commit and push results
+        if: success()
         run: |
-          git config --local user.email "workflow@github.com"
-          git config --local user.name "Daily News Workflow"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # 创建或切换到 output 分支
+          git checkout -b ${{ env.OUTPUT_BRANCH }} 2>/dev/null || git checkout ${{ env.OUTPUT_BRANCH }}
+
+          # 从 main 分支获取最新的非 output 文件
+          git checkout main -- . 2>/dev/null || true
+
+          # 添加生成的文件
           git add output/
-          git diff --staged --quiet || git commit -m "Daily report $(date +%Y-%m-%d)"
-          git push
+
+          # 检查是否有变更
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          # 提交并推送
+          git commit -m "📰 Daily Report $(date +%Y-%m-%d) [run ${{ github.run_id }}]"
+          git push origin ${{ env.OUTPUT_BRANCH }} --force-with-lease
+
+          # 同时更新 main 分支的 output 目录（用于 Obsidian 同步）
+          git checkout main
+          git checkout ${{ env.OUTPUT_BRANCH }} -- output/
+          git add output/
+          if ! git diff --staged --quiet; then
+            git commit -m "📰 Sync daily reports to main $(date +%Y-%m-%d)"
+            git push origin main
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Workflow failed. Check logs for details."
+          cat output/workflow.log || true

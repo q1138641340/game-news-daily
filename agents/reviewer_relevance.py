@@ -5,6 +5,9 @@
 
 from tools.llm import get_review_glm
 from tools.json_parser import parse_json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RelevanceReviewerAgent:
@@ -127,14 +130,14 @@ class RelevanceReviewerAgent:
         if not quality_passed:
             return []
 
-        print(f"  相关性审查 {len(quality_passed)} 条内容...")
+        logger.info(f"  相关性审查 {len(quality_passed)} 条内容...")
 
         # 统计图形学类论文
         cs_graphics_count = sum(
             1 for item in quality_passed
             if self._is_cs_graphics(item)
         )
-        print(f"    [图形学/理工类论文: {cs_graphics_count} 条，配额: 最多4条/批次]")
+        logger.info(f"    [图形学/理工类论文: {cs_graphics_count} 条，配额: 最多4条/批次]")
 
         # 批量审查
         results = []
@@ -145,9 +148,9 @@ class RelevanceReviewerAgent:
             try:
                 batch_results = self._review_batch(batch, cs_graphics_count)
                 results.extend(batch_results)
-                print(f"    批次 {i//batch_size + 1} 完成")
+                logger.info(f"    批次 {i//batch_size + 1} 完成")
             except Exception as e:
-                print(f"    [批次失败] {e}")
+                logger.warning(f"    [批次失败] {e}")
                 for item in batch:
                     item["relevance_score"] = 0.5
                     item["approved"] = True
@@ -161,7 +164,7 @@ class RelevanceReviewerAgent:
         low = sum(1 for r in approved if r.get("priority") == "low")
         rejected = sum(1 for r in results if not r.get("approved", False))
 
-        print(f"    通过: {len(approved)} 条 (high:{high} medium:{medium} low:{low}) | 排除: {rejected} 条")
+        logger.info(f"    通过: {len(approved)} 条 (high:{high} medium:{medium} low:{low}) | 排除: {rejected} 条")
 
         return results
 
@@ -254,6 +257,6 @@ class RelevanceReviewerAgent:
             for item in graphics_approved[4:]:
                 item["approved"] = False
                 item["reason"] = item.get("reason", "") + " [超出图形学配额]"
-                print(f"    [排除] 图形学配额超限: {item.get('title', '')[:40]}...")
+                logger.info(f"    [排除] 图形学配额超限: {item.get('title', '')[:40]}...")
 
         return batch

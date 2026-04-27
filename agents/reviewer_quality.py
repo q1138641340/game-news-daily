@@ -5,6 +5,9 @@
 
 from tools.llm import get_review_glm
 from tools.json_parser import parse_json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class QualityReviewerAgent:
@@ -59,16 +62,16 @@ class QualityReviewerAgent:
         results = []
         batch_size = 20
 
-        print(f"  质量审查 {len(items)} 条内容...")
+        logger.info(f"  质量审查 {len(items)} 条内容...")
 
         for i in range(0, len(items), batch_size):
             batch = items[i:i+batch_size]
             try:
                 batch_results = self._review_batch(batch)
                 results.extend(batch_results)
-                print(f"    批次 {i//batch_size + 1} 完成")
+                logger.info(f"    批次 {i//batch_size + 1} 完成")
             except Exception as e:
-                print(f"    [批次失败] {e}")
+                logger.warning(f"    [批次失败] {e}")
                 # 批次失败时，标记为未通过
                 for item in batch:
                     item["quality_score"] = 0.0
@@ -78,7 +81,7 @@ class QualityReviewerAgent:
 
         # 统计
         approved_count = sum(1 for r in results if r.get("approved", False))
-        print(f"    审查通过 {approved_count}/{len(results)} 条")
+        logger.info(f"    审查通过 {approved_count}/{len(results)} 条")
 
         return results
 

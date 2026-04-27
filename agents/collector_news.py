@@ -9,6 +9,9 @@ from typing import Optional
 from tools.web_scraper import WebScraper, NewsSearcher
 from tools.llm import get_collect_deepseek_flash, get_collect_minimax
 from tools.json_parser import parse_json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class NewsCollectorAgent:
@@ -37,31 +40,31 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
             timeout=config.get("workflow", {}).get("collect", {}).get("timeout_seconds", 30)
         )
         self.searcher = NewsSearcher()
-        self.llm, self.model = get_collect_minimax()  # MiniMax 收集
+        self.llm, self.model = get_collect_minimax()
 
     def run(self) -> list[dict]:
         """执行完整的新闻收集流程"""
         all_raw = []
 
         # 步骤1: RSS 订阅
-        print("  [1/3] RSS 订阅源...")
+        logger.info("  [1/3] RSS 订阅源...")
         rss_items = self._collect_rss()
         all_raw.extend(rss_items)
-        print(f"        RSS 获取 {len(rss_items)} 条")
+        logger.info(f"        RSS 获取 {len(rss_items)} 条")
 
         # 步骤2: 主动搜索
-        print("  [2/3] 主动搜索新闻...")
+        logger.info("  [2/3] 主动搜索新闻...")
         search_items = self._search_news()
         all_raw.extend(search_items)
-        print(f"        搜索获取 {len(search_items)} 条")
+        logger.info(f"        搜索获取 {len(search_items)} 条")
 
         # 步骤3: 爬取搜索结果中的网页（深度内容）
-        print("  [3/3] 爬取详细内容...")
+        logger.info("  [3/3] 爬取详细内容...")
         enriched = self._enrich_with_content(all_raw)
 
         # 去重和清洗
         cleaned = self._deduplicate(enriched)
-        print(f"        去重后 {len(cleaned)} 条")
+        logger.info(f"        去重后 {len(cleaned)} 条")
 
         return cleaned
 
@@ -105,7 +108,7 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
                     count += 1
 
             except Exception as e:
-                print(f"        [RSS失败] {feed_config['name']}: {e}")
+                logger.warning(f"        [RSS失败] {feed_config['name']}: {e}")
 
         return all_items
 
@@ -190,7 +193,7 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
             if isinstance(result, list):
                 return result
         except Exception as e:
-            print(f"        [LLM清洗失败，使用原始数据]: {e}")
+            logger.warning(f"        [LLM清洗失败，使用原始数据]: {e}")
 
         return url_unique
 

@@ -8,6 +8,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from tools.llm import get_collect_deepseek_flash, get_collect_minimax
 from tools.json_parser import parse_json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AcademicCollectorAgent:
@@ -47,8 +50,8 @@ class AcademicCollectorAgent:
 
     def __init__(self, config: dict):
         self.config = config
-        self.mm_client, self.mm_model = get_collect_minimax()   # MiniMax
-        self.ds_client, self.ds_model = get_collect_deepseek_flash()  # DeepSeek Flash
+        self.mm_client, self.mm_model = get_collect_minimax()
+        self.ds_client, self.ds_model = get_collect_deepseek_flash()
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'GameResearchBot/1.0 (academic research)'
@@ -65,33 +68,33 @@ class AcademicCollectorAgent:
         zh_kw = academic_kw.get("zh", [])
 
         # 步骤1: arXiv（技术类论文）
-        print("  [1/4] arXiv 论文（技术类）...")
+        logger.info("  [1/4] arXiv 论文（技术类）...")
         arxiv_papers = self._collect_arxiv(tech_kw)
         all_papers.extend(arxiv_papers)
-        print(f"        arXiv 获取 {len(arxiv_papers)} 篇")
+        logger.info(f"        arXiv 获取 {len(arxiv_papers)} 篇")
 
         # 步骤2: Semantic Scholar（人文艺术类）
-        print("  [2/4] Semantic Scholar（人文艺术类）...")
+        logger.info("  [2/4] Semantic Scholar（人文艺术类）...")
         ss_papers = self._collect_semantic_scholar(humanities_kw)
         all_papers.extend(ss_papers)
-        print(f"        Semantic Scholar 获取 {len(ss_papers)} 篇")
+        logger.info(f"        Semantic Scholar 获取 {len(ss_papers)} 篇")
 
         # 步骤3: CrossRef（人文艺术 + 中文期刊）
-        print("  [3/4] CrossRef 期刊（人文+中文）...")
+        logger.info("  [3/4] CrossRef 期刊（人文+中文）...")
         crossref_papers = self._collect_crossref(humanities_kw + zh_kw)
         all_papers.extend(crossref_papers)
-        print(f"        CrossRef 获取 {len(crossref_papers)} 篇")
+        logger.info(f"        CrossRef 获取 {len(crossref_papers)} 篇")
 
         # 步骤4: DBLP（计算机科学文献）
-        print("  [4/4] DBLP 计算机科学...")
+        logger.info("  [4/4] DBLP 计算机科学...")
         dblp_papers = self._collect_dblp()
         all_papers.extend(dblp_papers)
-        print(f"        DBLP 获取 {len(dblp_papers)} 篇")
+        logger.info(f"        DBLP 获取 {len(dblp_papers)} 篇")
 
         # LLM 清洗和评估
         if all_papers:
             cleaned = self._clean_with_llm(all_papers)
-            print(f"        清洗后 {len(cleaned)} 篇")
+            logger.info(f"        清洗后 {len(cleaned)} 篇")
             return cleaned
 
         return []
@@ -123,30 +126,30 @@ class AcademicCollectorAgent:
                     if resp.status_code == 429:
                         if attempt < 3:
                             wait_time = 60 * (attempt + 1)  # 指数退避
-                            print(f"        [arXiv限速，等待{wait_time}秒重试...]")
+                            logger.warning(f"        [arXiv限速，等待{wait_time}秒重试...]")
                             time.sleep(wait_time)
                             continue
                         else:
-                            print(f"        [arXiv失败] {query}: 速率限制")
+                            logger.warning(f"        [arXiv失败] {query}: 速率限制")
                             break
 
                     # 502 Bad Gateway 等服务器错误
                     if resp.status_code >= 500:
                         if attempt < 3:
                             wait_time = 30 * (attempt + 1)
-                            print(f"        [arXiv服务器错误，等待{wait_time}秒重试...]")
+                            logger.warning(f"        [arXiv服务器错误，等待{wait_time}秒重试...]")
                             time.sleep(wait_time)
                             continue
                         else:
-                            print(f"        [arXiv失败] {query}: 服务器错误 {resp.status_code}")
+                            logger.warning(f"        [arXiv失败] {query}: 服务器错误 {resp.status_code}")
                             break
 
                     resp.raise_for_status()
                     papers = self._parse_arxiv_xml(resp.text, cutoff)
                     if papers:
-                        print(f"        [arXiv成功] {query}: {len(papers)} 篇")
+                        logger.info(f"        [arXiv成功] {query}: {len(papers)} 篇")
                     else:
-                        print(f"        [arXiv无结果] {query}")
+                        logger.info(f"        [arXiv无结果] {query}")
                     all_papers.extend(papers)
                     break
 
@@ -155,7 +158,7 @@ class AcademicCollectorAgent:
                         wait_time = 10 * (attempt + 1)
                         time.sleep(wait_time)
                     else:
-                        print(f"        [arXiv失败] {query}: {str(e)[:60]}")
+                        logger.warning(f"        [arXiv失败] {query}: {str(e)[:60]}")
 
         # 去重
         seen = set()
@@ -203,11 +206,11 @@ class AcademicCollectorAgent:
                     if resp.status_code == 429:
                         if attempt < 2:
                             wait_time = 20 * (attempt + 1)  # 指数退避
-                            print(f"        [SS限速，等待{wait_time}秒重试...]")
+                            logger.warning(f"        [SS限速，等待{wait_time}秒重试...]")
                             time.sleep(wait_time)
                             continue
                         else:
-                            print(f"        [SS失败] {query}: 速率限制")
+                            logger.warning(f"        [SS失败] {query}: 速率限制")
                             break
 
                     resp.raise_for_status()
@@ -232,7 +235,7 @@ class AcademicCollectorAgent:
                         })
 
                     if len(data.get("data", [])) > 0:
-                        print(f"        [SS成功] {query}: {len(data['data'])} 篇")
+                        logger.info(f"        [SS成功] {query}: {len(data['data'])} 篇")
                     break
 
                 except Exception as e:
@@ -240,7 +243,7 @@ class AcademicCollectorAgent:
                         wait_time = 5 * (attempt + 1)
                         time.sleep(wait_time)
                     else:
-                        print(f"        [SS失败] {query}: {str(e)[:60]}")
+                        logger.warning(f"        [SS失败] {query}: {str(e)[:60]}")
 
         # 去重
         seen = set()
@@ -319,7 +322,7 @@ class AcademicCollectorAgent:
                     })
 
             except Exception as e:
-                print(f"        [CrossRef失败] {query}: {e}")
+                logger.warning(f"        [CrossRef失败] {query}: {e}")
 
         # 去重
         seen = set()
@@ -347,7 +350,7 @@ class AcademicCollectorAgent:
             if isinstance(result, list):
                 return [p for p in result if p.get("relevance", 0) >= 0.3]
         except Exception as e:
-            print(f"        [MiniMax清洗失败，尝试DeepSeek Flash]: {e}")
+            logger.warning(f"        [MiniMax清洗失败，尝试DeepSeek Flash]: {e}")
             try:
                 result = self.ds_client.chat_json(
                     system_prompt=self.SYSTEM_PROMPT,
@@ -358,7 +361,7 @@ class AcademicCollectorAgent:
                 if isinstance(result, list):
                     return [p for p in result if p.get("relevance", 0) >= 0.3]
             except Exception as e2:
-                print(f"        [DeepSeek Flash 也失败，使用原始数据]: {e2}")
+                logger.warning(f"        [DeepSeek Flash 也失败，使用原始数据]: {e2}")
 
         return papers
 
@@ -421,14 +424,14 @@ class AcademicCollectorAgent:
                         })
 
                     if hits:
-                        print(f"        [DBLP成功] {query}: {len(hits)} 篇")
+                        logger.info(f"        [DBLP成功] {query}: {len(hits)} 篇")
                     break
 
                 except Exception as e:
                     if attempt < 2:
                         continue
                     else:
-                        print(f"        [DBLP失败] {query}: {str(e)[:60]}")
+                        logger.warning(f"        [DBLP失败] {query}: {str(e)[:60]}")
 
         # 去重
         seen = set()
@@ -506,6 +509,6 @@ class AcademicCollectorAgent:
                 })
 
         except Exception as e:
-            print(f"        [arXiv XML解析失败]: {e}")
+            logger.warning(f"        [arXiv XML解析失败]: {e}")
 
         return papers
