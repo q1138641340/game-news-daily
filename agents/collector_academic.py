@@ -190,7 +190,7 @@ class AcademicCollectorAgent:
 
         for i, query in enumerate(queries):
             if i > 0:
-                time.sleep(8)  # 增加间隔降低限速
+                time.sleep(10)  # 增加间隔降低限速
 
             for attempt in range(3):
                 try:
@@ -205,7 +205,7 @@ class AcademicCollectorAgent:
 
                     if resp.status_code == 429:
                         if attempt < 2:
-                            wait_time = 20 * (attempt + 1)  # 指数退避
+                            wait_time = 60 * (attempt + 1)  # 更长的退避时间
                             logger.warning(f"        [SS限速，等待{wait_time}秒重试...]")
                             time.sleep(wait_time)
                             continue

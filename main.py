@@ -27,6 +27,14 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
+
+# 降低第三方库日志级别，减少刷屏
+logging.getLogger('readability').setLevel(logging.WARNING)
+logging.getLogger('lxml').setLevel(logging.WARNING)
+logging.getLogger('ddgs').setLevel(logging.WARNING)
+logging.getLogger('duckduckgo_search').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+
 logger = logging.getLogger(__name__)
 
 # 添加项目根目录到 Python 路径

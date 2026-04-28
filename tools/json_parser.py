@@ -95,6 +95,16 @@ def parse_json(text: str) -> dict | list:
         except json.JSONDecodeError:
             pass
 
+    # 尝试提取 <think> 标签后的 JSON（MiniMax 等模型的思考过程会包裹 JSON）
+    think_match = re.search(r'<think>\s*(.+?)\s*</think>', text, re.DOTALL)
+    if think_match:
+        think_content = think_match.group(1)
+        # 递归尝试解析思考内容中的 JSON
+        try:
+            return parse_json(think_content)
+        except ValueError:
+            pass
+
     raise ValueError(f"Cannot parse JSON from: {text[:200]}...")
 
 

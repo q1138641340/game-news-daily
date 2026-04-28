@@ -132,7 +132,7 @@ class PDFDownloader:
 
         依次尝试：
         1. Unpaywall (合法开放获取)
-        2. PubMed Central (生物医学)
+        2. CrossRef API (获取 DOI 链接)
         3. 直接搜索 PDF
 
         Args:
@@ -162,7 +162,28 @@ class PDFDownloader:
             except Exception:
                 pass
 
-        # 2. 用标题搜索 PDF
+        # 2. CrossRef API 获取 PDF 链接
+        if doi:
+            try:
+                crossref_url = f"https://api.crossref.org/works/{doi}"
+                resp = requests.get(crossref_url, timeout=15)
+                resp.raise_for_status()
+                data = resp.json()
+                # 尝试获取 publisher PDF 链接
+                item = data.get("message", {})
+                links = item.get("link", []) + item.get("pdf", [])
+                for link in links:
+                    if link.get("content-type") == "application/pdf" or link.get("type") == "pdf":
+                        pdf_url = link.get("URL", "")
+                        if pdf_url:
+                            result = self.download(pdf_url, filename)
+                            if result:
+                                print(f"  [CrossRef成功] {title[:50]}")
+                                return result
+            except Exception:
+                pass
+
+        # 3. 用标题搜索 PDF
         try:
             from duckduckgo_search import DDGS
             with DDGS() as ddgs:
