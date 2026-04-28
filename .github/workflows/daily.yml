@@ -1,4 +1,4 @@
-name: Daily News Workflow
+name: game-news-daily
 
 on:
   # 定时运行：每天 UTC 12:00（北京时间 20:00）
