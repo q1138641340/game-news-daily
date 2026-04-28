@@ -1,0 +1,113 @@
+name: game-news-daily
+
+on:
+  # 定时运行：每天 UTC 00:00（北京时间 08:00）
+  schedule:
+    - cron: '0 0 * * *'
+
+  # 允许手动触发
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+  TARGET_REPO: 'q1138641340/github-obsidian-vault'
+  TARGET_BRANCH: 'main'
+  TARGET_PATH: 'Research Feed'
+
+jobs:
+  run-workflow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create output directory
+        run: mkdir -p output/papers
+
+      - name: Run workflow
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          KIMI_BASE_URL: ${{ secrets.KIMI_BASE_URL }}
+          MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          MINIMAX_BASE_URL: ${{ secrets.MINIMAX_BASE_URL }}
+          GITHUB_ACTIONS: "true"
+        run: |
+          python main.py 2>&1 | tee output/workflow.log
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        with:
+          name: daily-report-${{ github.run_id }}
+          path: |
+            output/
+            !output/papers/*.pdf
+          retention-days: 7
+
+      # ===== 跨仓库推送：推送到 Obsidian 笔记仓库 =====
+      - name: Push to Obsidian Vault Repository
+        if: success()
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          # 检查 output 目录是否有 Markdown 文件
+          if [ -z "$(ls -A output/*.md 2>/dev/null)" ]; then
+            echo "No markdown output generated, skipping push to vault repository"
+            exit 0
+          fi
+
+          # 配置 git（使用 global 确保在 /tmp/vault 克隆目录中也生效）
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          # 克隆目标仓库
+          git clone --depth 1 https://x-access-token:$GH_PAT@github.com/${{ env.TARGET_REPO }}.git /tmp/vault
+
+          # 创建目标目录并复制文件（包括 PDF）
+          mkdir -p "/tmp/vault/${{ env.TARGET_PATH }}"
+          cp -r output/* "/tmp/vault/${{ env.TARGET_PATH }}/"
+
+          # 提交并推送
+          cd /tmp/vault
+          git add "${{ env.TARGET_PATH }}/"
+
+          # 检查是否有变更
+          if git diff --staged --quiet; then
+            echo "No changes to commit in vault repository"
+            exit 0
+          fi
+
+          COMMIT_MSG="📰 Daily Report $(date +%Y-%m-%d) [run ${{ github.run_id }}]"
+          git commit -m "$COMMIT_MSG"
+          git push origin ${{ env.TARGET_BRANCH }}
+
+          echo "Successfully pushed daily report to ${{ env.TARGET_REPO }}/${{ env.TARGET_PATH }}"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Workflow failed. Check logs for details."
+          cat output/workflow.log || true
