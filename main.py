@@ -259,10 +259,9 @@ def main():
 
             # 如果有下载失败的，更新日报追加失败列表
             if download_results.get("failed"):
-                report_content_updated = report_content + writer._format_failed_papers(download_results["failed"], today)
-                # 覆盖写入（带 failed_papers）
+                # 使用原始 report_content，让 write_daily_report 内部处理 failed_papers
                 writer.write_daily_report(
-                    content=report_content_updated,
+                    content=report_content,
                     date=today,
                     tags=tags[:20],
                     failed_papers=download_results["failed"]
