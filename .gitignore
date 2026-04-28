@@ -23,4 +23,4 @@ Thumbs.db
 raw_data/
 
 # 输出目录（本地运行时生成，GitHub Actions 推送到 daily-reports 分支）
-output/
+# 注意：output/ 不再被忽略，由 GitHub Actions 负责同步到 daily-reports 分支
