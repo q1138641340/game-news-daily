@@ -1,16 +1,18 @@
 name: Daily News Workflow
 
 on:
-  # 定时运行：每天 UTC 00:00（北京时间 08:00）
+  # 定时运行：每天 UTC 12:00（北京时间 20:00）
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 12 * * *'
 
   # 允许手动触发
   workflow_dispatch:
 
 env:
   PYTHON_VERSION: '3.11'
-  OUTPUT_BRANCH: 'daily-reports'
+  TARGET_REPO: 'q1138641340/github-obsidian-vault'
+  TARGET_BRANCH: 'main'
+  TARGET_PATH: 'Research Feed'
 
 jobs:
   run-workflow:
@@ -67,39 +69,44 @@ jobs:
             !output/papers/*.pdf
           retention-days: 7
 
-      - name: Commit and push results
+      # ===== 跨仓库推送：推送到 Obsidian 笔记仓库 =====
+      - name: Push to Obsidian Vault Repository
         if: success()
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-
-          # 创建或切换到 output 分支
-          git checkout -b ${{ env.OUTPUT_BRANCH }} 2>/dev/null || git checkout ${{ env.OUTPUT_BRANCH }}
-
-          # 从 main 分支获取最新的非 output 文件
-          git checkout main -- . 2>/dev/null || true
-
-          # 添加生成的文件
-          git add output/
-
-          # 检查是否有变更
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
+          # 检查 output 目录是否有 Markdown 文件
+          if [ -z "$(ls -A output/*.md 2>/dev/null)" ]; then
+            echo "No markdown output generated, skipping push to vault repository"
             exit 0
           fi
 
-          # 提交并推送
-          git commit -m "📰 Daily Report $(date +%Y-%m-%d) [run ${{ github.run_id }}]"
-          git push origin ${{ env.OUTPUT_BRANCH }} --force-with-lease
+          # 配置 git
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
 
-          # 同时更新 main 分支的 output 目录（用于 Obsidian 同步）
-          git checkout main
-          git checkout ${{ env.OUTPUT_BRANCH }} -- output/
-          git add output/
-          if ! git diff --staged --quiet; then
-            git commit -m "📰 Sync daily reports to main $(date +%Y-%m-%d)"
-            git push origin main
+          # 克隆目标仓库
+          git clone --depth 1 https://x-access-token:$GH_PAT@github.com/${{ env.TARGET_REPO }}.git /tmp/vault
+
+          # 创建目标目录并复制文件
+          mkdir -p "/tmp/vault/${{ env.TARGET_PATH }}"
+          cp -r output/* "/tmp/vault/${{ env.TARGET_PATH }}/"
+
+          # 提交并推送
+          cd /tmp/vault
+          git add "${{ env.TARGET_PATH }}/"
+
+          # 检查是否有变更
+          if git diff --staged --quiet; then
+            echo "No changes to commit in vault repository"
+            exit 0
           fi
+
+          COMMIT_MSG="📰 Daily Report $(date +%Y-%m-%d) [run ${{ github.run_id }}]"
+          git commit -m "$COMMIT_MSG"
+          git push origin ${{ env.TARGET_BRANCH }}
+
+          echo "Successfully pushed daily report to ${{ env.TARGET_REPO }}/${{ env.TARGET_PATH }}"
 
       - name: Notify on failure
         if: failure()

@@ -1,8 +1,9 @@
-# Daily News Workflow 配置
-# 游戏研究 + 技术哲学 + 叙事学 + 媒介批判 + 控制论 + 交互式文献学
+# Daily News Workflow 配置模板
+# 复制此文件为 config.yaml 并填入你的本地配置
 
+# Obsidian 配置
 obsidian:
-  # vault_path: "/Users/sunjinghe/Library/Mobile Documents/iCloud~md~obsidian/Documents/Obsidian Vault"  # 仅本地调试需要
+  # vault_path: "/path/to/your/obsidian/vault"  # 本地 Obsidian vault 路径（仅本地运行时需要）
   output_folder: "Research Feed"
   pdf_folder: "Research Feed/Papers"
 
@@ -25,46 +26,36 @@ search_keywords:
 
 # 学术论文搜索关键词
 academic_keywords:
-  # 技术与工程类（arXiv + DBLP）- 精简，避免过多纯技术
   tech:
     - "game AI"
     - "procedural content generation"
     - "game engine"
     - "virtual reality game"
-  # 人文艺术与媒介理论类（CrossRef + Semantic Scholar）- 重点扩展
   humanities:
-    # 游戏研究核心
     - "game studies ludology"
     - "interactive storytelling narrative"
     - "media theory video game"
     - "procedural rhetoric"
     - "game history"
     - "narratology game"
-    # 媒介理论与批评
     - "media archaeology"
     - "digital media theory"
     - "new media art"
     - "electronic literature"
     - "hypertext fiction"
-    # 控制论与系统论
     - "cybernetics history"
     - "systems theory"
     - "autopoiesis"
     - "feedback loop"
-    # 交互式文学与数字人文
     - "interactive fiction"
     - "digital humanities"
     - "computational narrative"
-    - "game narratology"
-    # 游戏艺术与美学
     - "game art aesthetics"
     - "game sound design"
     - "game worldbuilding"
-    # 跨媒体与 IP
     - "transmedia storytelling"
     - "media franchising"
     - "game adaptation"
-  # 中文论文（CrossRef 中文搜索）
   zh:
     - "游戏叙事"
     - "游戏研究"
@@ -79,37 +70,28 @@ academic_keywords:
 
 # RSS 订阅源
 rss_feeds:
-  # ========== 学术 - 人文艺术类（优先） ==========
   - name: "Game Studies (丹麦)"
     url: "https://gamestudies.org/160.xml"
   - name: "Games and Culture (SAGE)"
     url: "https://journals.sagepub.com/action/gsaRSS?journalName=Games+and+Culture"
   - name: "Digital Games Research Association (DiGRA)"
     url: "https://digra.org/publications/digra-journal/rss"
-
-  # ========== 人文艺术类 RSS（重点维护） ==========
   - name: "The New York Times - Arts"
     url: "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
   - name: "MIT Technology Review"
     url: "https://www.technologyreview.com/feed/"
   - name: "Wired - Culture"
-    url: "https://www.wired.com/feed/category/culture/latest/rss"
+    url: "https://wired.com/feed/category/culture/latest/rss"
   - name: "The Verge"
     url: "https://www.theverge.com/rss/index.xml"
-
-  # ========== 学术 - 技术类（arXiv 新格式） ==========
   - name: "arXiv CS - AI"
     url: "https://arxiv.org/rss/cs.AI"
   - name: "arXiv CS - HCI"
     url: "https://arxiv.org/rss/cs.HC"
   - name: "arXiv CS - Games"
     url: "https://arxiv.org/rss/cs.GT"
-
-  # ========== 新闻 - 国际游戏媒体 ==========
   - name: "GamesIndustry.biz"
     url: "https://www.gamesindustry.biz/feed"
-
-  # ========== 新闻 - 国内游戏媒体 ==========
   - name: "36Kr 游戏资讯"
     url: "https://36kr.com/feed"
 
@@ -124,12 +106,11 @@ workflow:
   review:
     min_quality_score: 0.5
     min_relevance_score: 0.3
-    # 图形学/理工类论文配额
     max_cs_graphics_per_batch: 4
 
   output:
     max_items_per_report: 50
     include_pdf_download: true
 
-# 定时运行
-schedule: "0 8 * * *"
+# 定时运行（北京时间 20:00）
+schedule: "0 20 * * *"

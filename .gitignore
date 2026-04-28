@@ -1,10 +1,12 @@
-# 依赖
-venv/
+# Python
 __pycache__/
 *.pyc
 *.pyo
 .env
+.env.local
+.env.production
 .venv
+venv/
 env/
 
 # IDE
@@ -17,10 +19,16 @@ env/
 .DS_Store
 Thumbs.db
 
-# 临时文件
+# 临时文件和日志
 *.log
 *.tmp
 raw_data/
 
-# 输出目录（本地运行时生成，GitHub Actions 推送到 daily-reports 分支）
-# 注意：output/ 不再被忽略，由 GitHub Actions 负责同步到 daily-reports 分支
+# GitHub Actions 产物（PDF 不推送）
+output/papers/*.pdf
+
+# Obsidian 配置（绝对禁止追踪）
+.obsidian/
+
+# 本地配置覆盖
+config.local.yaml
