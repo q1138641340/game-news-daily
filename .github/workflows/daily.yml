@@ -1,9 +1,9 @@
 name: game-news-daily
 
 on:
-  # 定时运行：每天 UTC 12:00（北京时间 20:00）
+  # 定时运行：每天 UTC 00:00（北京时间 08:00）
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '0 0 * * *'
 
   # 允许手动触发
   workflow_dispatch:
@@ -86,7 +86,7 @@ jobs:
           # 克隆目标仓库
           git clone --depth 1 https://x-access-token:$GH_PAT@github.com/${{ env.TARGET_REPO }}.git /tmp/vault
 
-          # 创建目标目录并复制文件
+          # 创建目标目录并复制文件（包括 PDF）
           mkdir -p "/tmp/vault/${{ env.TARGET_PATH }}"
           cp -r output/* "/tmp/vault/${{ env.TARGET_PATH }}/"
 
