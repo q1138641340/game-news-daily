@@ -155,7 +155,7 @@ def get_collect_deepseek() -> tuple[LLMClient, str]:
     return client, Models.FORMAT_DEEPSEEK_PRO
 
 
-def get_review_glm() -> tuple[LLMClient, str]:
+def get_review_kimi() -> tuple[LLMClient, str]:
     """审查阶段 Kimi-2.5 客户端"""
     client = LLMClient(provider="kimi")
     return client, Models.REVIEW_KIMI

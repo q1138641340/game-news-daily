@@ -3,7 +3,7 @@
 负责过滤低质量内容：广告、垃圾信息、信息不完整等
 """
 
-from tools.llm import get_review_glm
+from tools.llm import get_review_kimi
 from tools.json_parser import parse_json
 import logging
 
@@ -43,7 +43,7 @@ class QualityReviewerAgent:
 
     def __init__(self, config: dict):
         self.config = config
-        self.llm, self.model = get_review_glm()  # GLM-5 审查
+        self.llm, self.model = get_review_kimi()  # Kimi-2.5 审查
 
     def run(self, items: list[dict]) -> list[dict]:
         """

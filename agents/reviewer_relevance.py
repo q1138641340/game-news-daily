@@ -3,7 +3,7 @@
 负责评估内容与用户研究兴趣的相关性
 """
 
-from tools.llm import get_review_glm
+from tools.llm import get_review_kimi
 from tools.json_parser import parse_json
 import logging
 
@@ -109,7 +109,7 @@ class RelevanceReviewerAgent:
 
     def __init__(self, config: dict):
         self.config = config
-        self.llm, self.model = get_review_glm()  # Kimi-2.5 审查
+        self.llm, self.model = get_review_kimi()  # Kimi-2.5 审查
 
     def run(self, items: list[dict]) -> list[dict]:
         """
