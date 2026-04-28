@@ -131,5 +131,5 @@ workflow:
     max_items_per_report: 50
     include_pdf_download: true
 
-# 定时运行（北京时间 20:00 = UTC 12:00，与 GitHub Actions workflow 中的 cron 一致）
-schedule: "0 20 * * *"
+# 定时运行（北京时间 08:00 = UTC 00:00，与 GitHub Actions workflow 中的 cron 一致）
+schedule: "0 8 * * *"
