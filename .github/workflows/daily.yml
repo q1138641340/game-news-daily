@@ -79,9 +79,9 @@ jobs:
             exit 0
           fi
 
-          # 配置 git
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          # 配置 git（使用 global 确保在 /tmp/vault 克隆目录中也生效）
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
 
           # 克隆目标仓库
           git clone --depth 1 https://x-access-token:$GH_PAT@github.com/${{ env.TARGET_REPO }}.git /tmp/vault
