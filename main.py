@@ -66,7 +66,7 @@ def load_config() -> dict:
 
 def create_empty_report(output_dir: str, date: str, reason: str = "No content"):
     """创建空报告（使用日期文件夹结构）"""
-    date_folder = f"{date}-Daily-Report"
+    date_folder = f"{date}"
     output_date_dir = os.path.join(output_dir, date_folder)
     os.makedirs(output_date_dir, exist_ok=True)
 
@@ -74,7 +74,7 @@ def create_empty_report(output_dir: str, date: str, reason: str = "No content"):
     papers_subdir = os.path.join(output_date_dir, "Papers")
     os.makedirs(papers_subdir, exist_ok=True)
 
-    report_path = os.path.join(output_date_dir, f"{date}-Daily-Report.md")
+    report_path = os.path.join(output_date_dir, "Daily-Report.md")
 
     content = f"""---
 title: "Game Research Daily - {date}"
@@ -230,13 +230,12 @@ def main():
             pdf_folder = "papers"
 
         # ============================================================
-        # 创建日期专属文件夹结构
-        # 格式：YYYY-MM-DD-Daily-Report/
-        #   ├── YYYY-MM-DD-Daily-Report.md
-        #   ├── Papers/
-        #   └── YYYY-MM-DD-raw-data.json
+        # 创建日期文件夹结构
+        # 格式：YYYY-MM-DD/
+        #   ├── Daily-Report.md
+        #   └── Papers/
         # ============================================================
-        date_folder = f"{today}-Daily-Report"
+        date_folder = f"{today}"
         output_date_dir = os.path.join(output_dir, date_folder)
         os.makedirs(output_date_dir, exist_ok=True)
 
@@ -248,9 +247,8 @@ def main():
 
         writer = ObsidianWriter(output_date_dir, "")  # 路径已包含 output_folder
 
-        # 写入日报
+        # 写入日报（使用固定文件名 Daily-Report.md）
         tags = ["daily-report", "game-research"]
-        # 添加研究兴趣标签
         for item in final_items:
             for area in item.get("interest_areas", []):
                 tag = area.lower().replace(" ", "-")
@@ -260,8 +258,9 @@ def main():
         report_path = writer.write_daily_report(
             content=report_content,
             date=today,
-            tags=tags[:20],  # 限制标签数量
-            failed_papers=[]
+            tags=tags[:20],
+            failed_papers=[],
+            filepath=os.path.join(output_date_dir, "Daily-Report.md")
         )
         logger.info(f"Daily report saved: {report_path}")
 
@@ -283,19 +282,14 @@ def main():
 
             # 如果有下载失败的，更新日报追加失败列表
             if download_results.get("failed"):
-                # 使用原始 report_content，让 write_daily_report 内部处理 failed_papers
                 writer.write_daily_report(
                     content=report_content,
                     date=today,
                     tags=tags[:20],
-                    failed_papers=download_results["failed"]
+                    failed_papers=download_results["failed"],
+                    filepath=os.path.join(output_date_dir, "Daily-Report.md")
                 )
                 logger.info("Updated report with failed downloads")
-
-        # 保存原始数据（调试用）
-        debug_path = os.path.join(output_date_dir, f"{today}-raw-data.json")
-        with open(debug_path, 'w', encoding='utf-8') as f:
-            json.dump(final_items, f, ensure_ascii=False, indent=2)
 
         # ============================================================
         # 完成
@@ -315,10 +309,10 @@ def main():
         try:
             today = datetime.now().strftime("%Y-%m-%d")
             output_dir = os.path.join(os.path.dirname(__file__), "output")
-            date_folder = f"{today}-Daily-Report"
+            date_folder = f"{today}"
             output_date_dir = os.path.join(output_dir, date_folder)
             os.makedirs(output_date_dir, exist_ok=True)
-            error_path = os.path.join(output_date_dir, f"{today}-ERROR.md")
+            error_path = os.path.join(output_date_dir, "Daily-Report.md")
             with open(error_path, 'w', encoding='utf-8') as f:
                 f.write(f"# Workflow Error - {today}\n\n")
                 f.write(f"Error: {str(e)}\n\n")

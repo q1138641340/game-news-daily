@@ -29,7 +29,8 @@ class ObsidianWriter:
         content: str,
         date: Optional[str] = None,
         tags: Optional[list[str]] = None,
-        failed_papers: Optional[list[dict]] = None
+        failed_papers: Optional[list[dict]] = None,
+        filepath: Optional[str] = None
     ) -> str:
         """
         写入日报文件
@@ -39,18 +40,22 @@ class ObsidianWriter:
             date: 日期字符串 (YYYY-MM-DD)，默认今天
             tags: 标签列表
             failed_papers: 下载失败的论文列表（会追加到日报末尾）
+            filepath: 自定义文件路径（优先于自动生成）
 
         Returns:
             写入的文件路径
         """
-        date = date or datetime.now().strftime("%Y-%m-%d")
-        filename = f"{date}-Daily-Report.md"
-        filepath = os.path.join(self.base_dir, filename)
+        if filepath:
+            file_path = filepath
+        else:
+            date = date or datetime.now().strftime("%Y-%m-%d")
+            filename = f"{date}-Daily-Report.md"
+            file_path = os.path.join(self.base_dir, filename)
 
         # 构建 frontmatter
         frontmatter = self._build_frontmatter(
-            title=f"Game Research Daily - {date}",
-            date=date,
+            title=f"Game Research Daily - {date or 'Daily Report'}",
+            date=date or datetime.now().strftime("%Y-%m-%d"),
             tags=tags or ["daily-report", "game-research"],
             type="daily-report"
         )
@@ -61,10 +66,10 @@ class ObsidianWriter:
         if failed_papers:
             full_content += self._format_failed_papers(failed_papers, date)
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(file_path, 'w', encoding='utf-8') as f:
             f.write(full_content)
 
-        return filepath
+        return file_path
 
     def write_paper_note(
         self,

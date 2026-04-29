@@ -41,7 +41,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Create output directory
-        run: mkdir -p output/papers
+        run: mkdir -p output
 
       - name: Run workflow
         env:
@@ -64,7 +64,7 @@ jobs:
           name: daily-report-${{ github.run_id }}
           path: |
             output/
-            !output/*-Daily-Report/Papers/*.pdf
+            !output/*/Papers/*.pdf
           retention-days: 7
 
       # ===== 跨仓库推送：推送到 Obsidian 笔记仓库 =====
@@ -73,8 +73,8 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          # 检查 output 目录是否有日期文件夹（包含 Markdown）
-          DATE_DIR=$(ls -d output/*-Daily-Report/ 2>/dev/null | head -1)
+          # 检查 output 目录是否有日期文件夹（YYYY-MM-DD 格式）
+          DATE_DIR=$(ls -d output/????-??-??/ 2>/dev/null | head -1)
           if [ -z "$DATE_DIR" ]; then
             echo "No daily report generated, skipping push to vault repository"
             exit 0
