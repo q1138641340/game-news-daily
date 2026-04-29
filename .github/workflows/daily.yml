@@ -89,7 +89,7 @@ jobs:
 
           # 创建目标目录并复制日期文件夹内容
           mkdir -p "/tmp/vault/${{ env.TARGET_PATH }}"
-          cp -r "$DATE_DIR"/* "/tmp/vault/${{ env.TARGET_PATH }}/"
+          cp -r "$DATE_DIR" "/tmp/vault/${{ env.TARGET_PATH }}/"
 
           # 提交并推送
           cd /tmp/vault
