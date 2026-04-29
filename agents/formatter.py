@@ -14,102 +14,205 @@ logger = logging.getLogger(__name__)
 class FormatterAgent:
     """整理输出 Agent"""
 
-    SYSTEM_PROMPT = """你是一位资深学术编辑，负责将学术论文和行业新闻整理为高水平的 Markdown 研究日报。
+    SYSTEM_PROMPT = """你是"研究总编 Agent"，负责将多来源信息整理为**可发表洞察 + 可积累研究资产**的研究日报。
 
-所有输出必须使用中文，措辞严谨、流畅、具有高水平学术阅读性。
+你的输出必须同时满足：
 
-## 报告结构
+* 对外：具备洞察力（像高质量研究媒体）
+* 对内：具备研究价值（可转论文/实验/理论）
 
-### 1. 日期标题
-使用正式标题格式：## 研究日报 YYYY-MM-DD
+请严格按照以下结构生成内容，不得缺省模块。
 
-### 2. 执行摘要（200字左右）
-- 概述当日最重要的3-5项内容
-- 涵盖学术前沿、行业动态、研究趋势
-- 使用学术化语言，客观陈述
+---
 
-### 3. 学术论文（核心部分）
+# 研究日报 YYYY-MM-DD（融合版）
 
-按研究领域分组，每组包含：
+---
 
-#### 论文标题（英文原文）
-**作者**: [完整作者列表，格式：姓，名 或 中文姓名]
-**来源**: [期刊/会议全称，发表年份]
-**DOI/PDF**: [链接]
-**摘要**:
-[详细摘要，200-400字，包含：
-- 研究背景与动机
-- 研究方法与技术路线
-- 核心发现与创新点
-- 研究意义与局限]
-**关联领域**: [游戏研究相关标签]
+## 1. 执行摘要（Executive Summary）
 
-#### 格式要求
-- 每篇论文必须有完整作者信息
-- DOI 链接必须提供
-- PDF 可下载的要标注
-- 英文论文标题保留原文，作者名保留原文但加中文说明
+采用结构：
 
-### 4. 行业新闻（深度报道风格）
+* **核心发现（What changed）**
+* **为何重要（Why it matters）**
+* **行动启示（What to do）**
 
-每条新闻包含：
-- 标题（中文）
-- **来源**: [媒体/机构名称，发表日期]
-- **原文链接**: [URL]
-- **内容概述**: [300-500字，深度分析]
-  - 事件背景
-  - 核心要点
-  - 影响与意义
-  - 与研究领域的关联
+最后必须追加一句：
 
-### 5. 趋势与关联分析（文献综述风格）
+→ 本日报推进的核心研究问题：Q1 / Q2
 
-本部分是核心，要求：
+---
 
-#### 论文与新闻的关联分析
-[从多个角度分析：
-- 理论与实践的互动
-- 技术发展对研究范式的影响
-- 跨领域知识的迁移
+## 2. 本日关键张力（Critical Tensions）
 
-每个关联点需说明来源]
+识别信息之间的"冲突 / 对立 / 悖论"：
 
-#### 值得关注的新趋势
-[从以下维度分析：
-1. **技术前沿**: [具体技术趋势及来源]
-2. **理论发展**: [理论进展及学术来源]
-3. **产业应用**: [应用趋势及行业来源]
-4. **方法论创新**: [研究方法创新及来源]
-5. **跨学科动向**: [跨领域趋势及来源]
+格式：
 
-每个趋势必须有明确的学术或行业来源支撑]
+### 张力 1：
 
-### 6. 推荐阅读
+* 冲突双方：
+* 本质矛盾：
+* 深层原因（机制层）：
 
-Top 3 必读条目：
-- 条目名称
-- **类型**: [论文/新闻]
-- **推荐理由**: [200字左右，说明为何必读]
-- **来源**: [完整来源信息]
+### 张力 2（可选）
 
-### 7. 参考来源总览
+---
 
-列出本次日报引用的所有来源：
-- 学术期刊/会议
-- 新闻媒体
-- 行业报告
+## 3. 深度议题（Research Agenda）
 
-## 格式规范
+将"推荐阅读"升级为一个研究议程：
 
-- 使用 Markdown 标题层级（##, ###, ####）
-- 所有链接使用行内链接格式 [标题](URL)
-- 论文引用格式：[序号] 作者. 标题. 期刊, 年份. URL
-- 主要章节之间使用 --- 分隔
-- 不使用 emoji
-- 严谨的学术写作风格
-- 每个数据、观点必须标注来源
+### 议题标题：
 
-只输出 Markdown 内容，不要任何解释。"""
+* 核心问题：
+* 相关材料串联路径：
+  1.
+  2.
+  3.
+* 可展开的子问题（至少2个）：
+
+---
+
+## 4. 方法论角落（Method Corner）
+
+提炼一个**可迁移的方法或框架**：
+
+* 方法名称：
+* 核心机制：
+* 可迁移应用（必须具体）：
+
+---
+
+# ↓↓↓ 从这里开始是"研究系统层"（必须保留）↓↓↓
+
+---
+
+## 5. 核心研究问题（Research Questions）
+
+必须具体、可用于论文：
+
+* Q1:
+* Q2:
+
+---
+
+## 6. 学术论文分析（结构化拆解）
+
+每篇论文必须使用以下结构：
+
+### [论文标题]
+
+1. 核心问题
+2. 方法拆解：
+
+   * 模型：
+   * 技术：
+   * 数据/实验：
+   * 难点：
+3. 关键发现
+4. 机制抽象（必须结构化）：
+
+   * 变量：
+   * 关系：
+   * 系统结构：
+5. 对研究问题的意义（必须指向 Q1/Q2）
+6. 批判性评估：
+
+   * 内部有效性：
+   * 外部有效性：
+   * 局限性：
+
+---
+
+## 7. 行业/新闻分析（结构化）
+
+每条必须包含：
+
+### [事件名称]
+
+* 核心内容：
+* 结构分析：
+
+  * 技术驱动力：
+  * 经济机制：
+  * 用户行为变化：
+* 对研究问题的影响：
+
+---
+
+## 8. 跨域机制映射（Mechanism Mapping）
+
+至少2条，必须"机制级表达"：
+
+### 映射 1：
+
+* 来源领域：
+* 目标领域：
+* 对应关系：
+
+  * A → B
+  * A → B
+* 机制解释：
+
+---
+
+## 9. 趋势分层（Trend Layers）
+
+* 短期（1年）：
+* 中期（3年）：
+* 长期（5–10年）：
+
+---
+
+## 10. 可执行行动（Action Items）（最重要）
+
+必须具体、可操作：
+
+* 实验：
+* 写作：
+* 技术验证：
+
+（至少3条）
+
+---
+
+## 11. 理论原型（Theory Prototype）（强烈建议）
+
+格式：
+
+理论名称（v0.x）：
+
+* 核心结构：
+* 关键变量：
+* 系统关系：
+
+---
+
+# 写作约束（必须遵守）
+
+1. 禁止空洞总结，必须结构化表达
+2. 优先使用：机制 / 模型 / 系统 / 变量
+3. 每一部分必须"可用于论文或实验"
+4. "张力"必须落到机制层，不允许停留在描述
+5. "行动项"必须真实可执行，不得抽象
+
+---
+
+# 最终目标
+
+这份日报必须同时满足：
+
+* 可以对外发布（具备洞察与结构）
+* 可以对内沉淀（可直接转化为）：
+
+  * 论文（related work / discussion）
+  * 实验设计
+  * 理论框架
+
+---
+
+现在根据以上规范，对输入内容进行完整重写。"""
 
     def __init__(self, config: dict):
         self.config = config
@@ -175,7 +278,7 @@ Top 3 必读条目：
                 user_message=f"请根据以下内容生成今日研究日报（全部使用中文）：\n{input_data}",
                 model=self.model,
                 temperature=0.4,
-                max_tokens=16000
+                max_tokens=25000
             )
             return report
         except Exception as e:
@@ -185,63 +288,157 @@ Top 3 必读条目：
     def _empty_report(self) -> str:
         """空日报"""
         date = datetime.now().strftime("%Y-%m-%d")
-        return f"""## 今日无符合条件的内容
+        return f"""# 研究日报 {date}（融合版）
 
-日期：{date}
+---
 
-今日没有通过审查的内容。
+## 1. 执行摘要（Executive Summary）
 
-可能原因：
-- 没有符合您研究兴趣的新发表或新闻
-- 所有收集的内容在质量审查阶段被过滤
-- API 速率限制或网络问题导致数据收集失败
+* **核心发现（What changed）**：今日无符合条件的内容
+* **为何重要（Why it matters）**：没有新的学术论文或行业新闻通过审查
+* **行动启示（What to do）**：请检查数据源和审查标准配置
 
-请检查配置后重试。"""
+→ 本日报推进的核心研究问题：Q1 / Q2（待补充）
+
+---
+
+## 2. 本日关键张力（Critical Tensions）
+
+暂无内容。
+
+---
+
+## 3. 深度议题（Research Agenda）
+
+暂无内容。
+
+---
+
+## 4. 方法论角落（Method Corner）
+
+暂无内容。
+
+---
+
+## 5. 核心研究问题（Research Questions）
+
+* Q1：（待补充）
+* Q2：（待补充）
+
+---
+
+## 6. 学术论文分析（结构化拆解）
+
+暂无内容。
+
+---
+
+## 7. 行业/新闻分析（结构化）
+
+暂无内容。
+
+---
+
+## 8. 跨域机制映射（Mechanism Mapping）
+
+暂无内容。
+
+---
+
+## 9. 趋势分层（Trend Layers）
+
+* 短期（1年）：（待补充）
+* 中期（3年）：（待补充）
+* 长期（5–10年）：（待补充）
+
+---
+
+## 10. 可执行行动（Action Items）
+
+* 实验：（待补充）
+* 写作：（待补充）
+* 技术验证：（待补充）
+
+---
+
+## 11. 理论原型（Theory Prototype）
+
+暂无内容。"""
 
     def _fallback_report(self, papers: list[dict], news: list[dict]) -> str:
         """降级方案：不使用LLM，直接格式化（中文）"""
         date = datetime.now().strftime("%Y-%m-%d")
-        lines = [f"## 研究日报 - {date}", ""]
+        lines = [f"# 研究日报 {date}（融合版）", ""]
 
+        # 执行摘要
+        lines.append("---")
+        lines.append("")
+        lines.append("## 1. 执行摘要（Executive Summary）")
+        lines.append("")
+        lines.append("* **核心发现（What changed）**：LLM生成失败，使用降级格式输出")
+        lines.append("* **为何重要（Why it matters）**：确保日报结构完整")
+        lines.append("* **行动启示（What to do）**：建议检查LLM服务状态")
+        lines.append("")
+        lines.append("→ 本日报推进的核心研究问题：Q1 / Q2（待补充）")
+        lines.append("")
+
+        # 论文
         if papers:
-            lines.append("### 学术论文")
+            lines.append("---")
+            lines.append("")
+            lines.append("## 6. 学术论文分析（结构化拆解）")
             lines.append("")
             for p in papers:
                 title = p.get("title", "无标题")
                 authors = p.get("authors", "未知作者")
                 venue = p.get("venue", "")
-                url = p.get("url", "")
                 doi = p.get("doi", "")
-                pdf = " [PDF]" if p.get("pdf_url") else ""
+                abstract = p.get("clean_content", "") or p.get("summary", "") or p.get("abstract", "")
 
-                lines.append(f"**{title}**")
-                lines.append(f"- 作者：{authors}")
+                lines.append(f"### [{title}]")
+                lines.append(f"1. **核心问题**：（待补充）")
+                lines.append(f"2. **方法拆解**：")
+                lines.append(f"   * 模型：（待补充）")
+                lines.append(f"   * 技术：（待补充）")
+                lines.append(f"   * 数据/实验：（待补充）")
+                lines.append(f"   * 难点：（待补充）")
+                lines.append(f"3. **关键发现**：（待补充）")
+                lines.append(f"4. **机制抽象**：（待补充）")
+                lines.append(f"5. **对研究问题的意义**：（待补充）")
+                lines.append(f"6. **批判性评估**：（待补充）")
+                lines.append("")
+                lines.append(f"**作者**: {authors}")
                 if venue:
-                    lines.append(f"- 来源：{venue}")
-                if url:
-                    lines.append(f"- 链接：{url}")
+                    lines.append(f"**来源**: {venue}")
                 if doi:
-                    lines.append(f"- DOI：[{doi}](https://doi.org/{doi})")
+                    lines.append(f"**DOI**: [{doi}](https://doi.org/{doi})")
+                if abstract:
+                    lines.append(f"**摘要**: {abstract[:300]}...")
                 lines.append("")
 
+        # 新闻
         if news:
             lines.append("---")
             lines.append("")
-            lines.append("### 行业新闻")
+            lines.append("## 7. 行业/新闻分析（结构化）")
             lines.append("")
             for n in news:
                 title = n.get("title", "无标题")
                 source = n.get("source", "")
                 url = n.get("url", "")
-                summary = n.get("summary", "")
+                summary = n.get("clean_content", "") or n.get("summary", "")
 
-                lines.append(f"**{title}**")
+                lines.append(f"### [{title}]")
+                lines.append(f"* **核心内容**：（待补充）")
+                lines.append(f"* **结构分析**：")
+                lines.append(f"   * 技术驱动力：（待补充）")
+                lines.append(f"   * 经济机制：（待补充）")
+                lines.append(f"   * 用户行为变化：（待补充）")
+                lines.append(f"* **对研究问题的影响**：（待补充）")
                 if source:
-                    lines.append(f"- 来源：{source}")
+                    lines.append(f"* **来源**: {source}")
                 if url:
-                    lines.append(f"- 链接：{url}")
-                if summary:
-                    lines.append(f"- {summary[:200]}")
+                    lines.append(f"* **链接**: [{url}]({url})")
                 lines.append("")
 
         return "\n".join(lines)

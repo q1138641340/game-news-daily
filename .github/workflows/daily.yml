@@ -64,7 +64,7 @@ jobs:
           name: daily-report-${{ github.run_id }}
           path: |
             output/
-            !output/papers/*.pdf
+            !output/*-Daily-Report/Papers/*.pdf
           retention-days: 7
 
       # ===== 跨仓库推送：推送到 Obsidian 笔记仓库 =====
@@ -73,9 +73,10 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          # 检查 output 目录是否有 Markdown 文件
-          if [ -z "$(ls -A output/*.md 2>/dev/null)" ]; then
-            echo "No markdown output generated, skipping push to vault repository"
+          # 检查 output 目录是否有日期文件夹（包含 Markdown）
+          DATE_DIR=$(ls -d output/*-Daily-Report/ 2>/dev/null | head -1)
+          if [ -z "$DATE_DIR" ]; then
+            echo "No daily report generated, skipping push to vault repository"
             exit 0
           fi
 
@@ -86,9 +87,9 @@ jobs:
           # 克隆目标仓库
           git clone --depth 1 https://x-access-token:$GH_PAT@github.com/${{ env.TARGET_REPO }}.git /tmp/vault
 
-          # 创建目标目录并复制文件（包括 PDF）
+          # 创建目标目录并复制日期文件夹内容
           mkdir -p "/tmp/vault/${{ env.TARGET_PATH }}"
-          cp -r output/* "/tmp/vault/${{ env.TARGET_PATH }}/"
+          cp -r "$DATE_DIR"/* "/tmp/vault/${{ env.TARGET_PATH }}/"
 
           # 提交并推送
           cd /tmp/vault

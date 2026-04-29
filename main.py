@@ -65,9 +65,16 @@ def load_config() -> dict:
 
 
 def create_empty_report(output_dir: str, date: str, reason: str = "No content"):
-    """创建空报告"""
-    os.makedirs(output_dir, exist_ok=True)
-    report_path = os.path.join(output_dir, f"{date}-Daily-Report.md")
+    """创建空报告（使用日期文件夹结构）"""
+    date_folder = f"{date}-Daily-Report"
+    output_date_dir = os.path.join(output_dir, date_folder)
+    os.makedirs(output_date_dir, exist_ok=True)
+
+    # 也创建 Papers 子文件夹（保持结构一致）
+    papers_subdir = os.path.join(output_date_dir, "Papers")
+    os.makedirs(papers_subdir, exist_ok=True)
+
+    report_path = os.path.join(output_date_dir, f"{date}-Daily-Report.md")
 
     content = f"""---
 title: "Game Research Daily - {date}"
@@ -222,7 +229,24 @@ def main():
             output_folder = ""
             pdf_folder = "papers"
 
-        writer = ObsidianWriter(vault_path, output_folder)
+        # ============================================================
+        # 创建日期专属文件夹结构
+        # 格式：YYYY-MM-DD-Daily-Report/
+        #   ├── YYYY-MM-DD-Daily-Report.md
+        #   ├── Papers/
+        #   └── YYYY-MM-DD-raw-data.json
+        # ============================================================
+        date_folder = f"{today}-Daily-Report"
+        output_date_dir = os.path.join(output_dir, date_folder)
+        os.makedirs(output_date_dir, exist_ok=True)
+
+        # Papers 子文件夹
+        papers_subdir = os.path.join(output_date_dir, "Papers")
+        os.makedirs(papers_subdir, exist_ok=True)
+
+        logger.info(f"Output directory: {output_date_dir}")
+
+        writer = ObsidianWriter(output_date_dir, "")  # 路径已包含 output_folder
 
         # 写入日报
         tags = ["daily-report", "game-research"]
@@ -248,7 +272,7 @@ def main():
         ]
 
         if papers_with_pdf and config.get("workflow", {}).get("output", {}).get("include_pdf_download", True):
-            pdf_dir = os.path.join(vault_path, pdf_folder)
+            pdf_dir = papers_subdir  # 使用新的 Papers 子文件夹
             downloader = PDFDownloader(pdf_dir)
 
             logger.info(f"Downloading {len(papers_with_pdf)} papers...")
@@ -269,8 +293,7 @@ def main():
                 logger.info("Updated report with failed downloads")
 
         # 保存原始数据（调试用）
-        debug_path = os.path.join(vault_path, output_folder, f"{today}-raw-data.json")
-        os.makedirs(os.path.dirname(debug_path), exist_ok=True)
+        debug_path = os.path.join(output_date_dir, f"{today}-raw-data.json")
         with open(debug_path, 'w', encoding='utf-8') as f:
             json.dump(final_items, f, ensure_ascii=False, indent=2)
 
@@ -292,8 +315,10 @@ def main():
         try:
             today = datetime.now().strftime("%Y-%m-%d")
             output_dir = os.path.join(os.path.dirname(__file__), "output")
-            os.makedirs(output_dir, exist_ok=True)
-            error_path = os.path.join(output_dir, f"{today}-ERROR.md")
+            date_folder = f"{today}-Daily-Report"
+            output_date_dir = os.path.join(output_dir, date_folder)
+            os.makedirs(output_date_dir, exist_ok=True)
+            error_path = os.path.join(output_date_dir, f"{today}-ERROR.md")
             with open(error_path, 'w', encoding='utf-8') as f:
                 f.write(f"# Workflow Error - {today}\n\n")
                 f.write(f"Error: {str(e)}\n\n")
