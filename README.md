@@ -46,78 +46,26 @@ python main.py
    - `KIMI_BASE_URL`
    - `MINIMAX_API_KEY`
    - `MINIMAX_BASE_URL`
+   - `GH_PAT` (Personal Access Token，需有 github-obsidian-vault 仓库访问权限)
 
-3. 工作流会自动运行，生成的日报会推送到 `daily-reports` 分支的 `output/` 目录
+3. 工作流会自动运行，生成的日报会推送到 `github-obsidian-vault` 仓库的 `Research Feed/` 目录
 
 ## Obsidian 同步
 
-### 方案 1: Obsidian Git 插件 (推荐)
+日报通过 GitHub Actions 自动同步到 `github-obsidian-vault` 仓库。
 
-1. 在 Obsidian 中安装 [Obsidian Git](https://github.com/denolehov/obsidian-git) 插件
+在 Obsidian vault 中配置:
 
-2. 在 Obsidian vault 中初始化 Git 仓库:
+1. 安装 [Obsidian Git](https://github.com/denolehov/obsidian-git) 插件
+
+2. 克隆同步仓库:
 ```bash
-cd "你的 Obsidian Vault 路径"
-git init
-git remote add origin https://github.com/你的用户名/daily-news-workflow.git
+git clone https://github.com/sunjinghe/github-obsidian-vault.git "你的 Obsidian Vault"
 ```
 
 3. 配置 Obsidian Git 插件:
-   - 打开设置 -> Obsidian Git
    - 设置自动备份间隔（例如每 30 分钟）
    - 启用 "Auto pull on startup"
-
-4. 创建同步脚本 `.obsidian/scripts/sync-daily-report.sh`:
-```bash
-#!/bin/bash
-VAULT_PATH="$(cd "$(dirname "$0")/../.." && pwd)"
-cd "$VAULT_PATH"
-
-# 拉取最新的日报
-git fetch origin
-git checkout daily-reports -- output/ 2>/dev/null || true
-
-# 复制到 Research Feed 目录
-if [ -d "output" ]; then
-    mkdir -p "Research Feed"
-    cp -r output/* "Research Feed/" 2>/dev/null || true
-    echo "Synced daily reports"
-fi
-```
-
-5. 在 Obsidian Git 插件设置中添加自定义命令:
-   - Command: `bash .obsidian/scripts/sync-daily-report.sh`
-   - 设置定时执行或手动触发
-
-### 方案 2: 手动同步
-
-1. 克隆仓库的 daily-reports 分支:
-```bash
-git clone -b daily-reports https://github.com/你的用户名/daily-news-workflow.git
-```
-
-2. 将 `output/` 目录复制到你的 Obsidian vault:
-```bash
-cp -r daily-news-workflow/output/* "你的 Obsidian Vault/Research Feed/"
-```
-
-### 方案 3: 使用 Git Submodule
-
-1. 在 Obsidian vault 中添加 submodule:
-```bash
-cd "你的 Obsidian Vault"
-git submodule add -b daily-reports https://github.com/你的用户名/daily-news-workflow.git daily-news-workflow
-```
-
-2. 创建软链接:
-```bash
-ln -s daily-news-workflow/output Research\ Feed
-```
-
-3. 更新时:
-```bash
-git submodule update --remote
-```
 
 ## 目录结构
 
@@ -140,6 +88,19 @@ git submodule update --remote
 ├── config.yaml            # 配置文件
 ├── requirements.txt       # Python 依赖
 └── main.py               # 主入口
+```
+
+## 输出结构
+
+Workflow 运行后，日报输出到 `github-obsidian-vault/Research Feed/` 目录：
+
+```
+Research Feed/
+└── YYYY-MM-DD/           ← 日期文件夹
+    ├── Daily-Report.md   ← 日报内容
+    └── Papers/           ← 论文 PDF
+        ├── paper1.pdf
+        └── paper2.pdf
 ```
 
 ## 配置说明
