@@ -48,6 +48,7 @@ from agents.reviewer_relevance import RelevanceReviewerAgent
 from agents.formatter import FormatterAgent
 from tools.pdf_downloader import PDFDownloader
 from tools.obsidian import ObsidianWriter
+from tools.dedup_cache import DedupCache
 
 
 def load_config() -> dict:
@@ -130,18 +131,27 @@ def main():
         logger.info("=" * 60)
 
         # ============================================================
+        # Phase 0: 加载跨天去重缓存
+        # ============================================================
+        cache_dir = os.path.join(os.path.dirname(__file__), "output", ".cache")
+        cache_path = os.path.join(cache_dir, "seen_items.json")
+        dedup_cache = DedupCache(max_age_days=90)
+        dedup_cache.load(cache_path)
+        logger.info("[Phase 0] Cross-day dedup cache loaded")
+
+        # ============================================================
         # Phase 1: 收集
         # ============================================================
         logger.info("[Phase 1] Information Collection")
 
         # 收集 Agent 1: 新闻 (RSS + 搜索)
         logger.info("Collecting Agent 1: News & Social Media...")
-        news_agent = NewsCollectorAgent(config)
+        news_agent = NewsCollectorAgent(config, dedup_cache)
         news_items = news_agent.run()
 
         # 收集 Agent 2: 学术论文
         logger.info("Collecting Agent 2: Academic Papers...")
-        academic_agent = AcademicCollectorAgent(config)
+        academic_agent = AcademicCollectorAgent(config, dedup_cache)
         paper_items = academic_agent.run()
 
         # 合并
@@ -290,6 +300,13 @@ def main():
                     filepath=os.path.join(output_date_dir, "Daily-Report.md")
                 )
                 logger.info("Updated report with failed downloads")
+
+        # ============================================================
+        # Phase 6.5: 保存跨天去重缓存
+        # ============================================================
+        dedup_cache.mark_batch_seen(final_items)
+        dedup_cache.save(cache_path)
+        logger.info("[Phase 6.5] Cross-day dedup cache saved")
 
         # ============================================================
         # 完成

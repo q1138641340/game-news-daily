@@ -128,6 +128,9 @@ Top 3 必读条目：
         if not items:
             return self._empty_report()
 
+        # 最终去重检查（标题相似度）
+        items = self._final_dedup(items)
+
         # 按类型分组
         papers = [item for item in items if item.get("category", "") in
                   ("game-studies", "narratology", "media-theory", "ai-games",
@@ -197,6 +200,53 @@ Top 3 必读条目：
 - API 速率限制或网络问题导致数据收集失败
 
 请检查配置后重试。"""
+
+    def _final_dedup(self, items: list[dict]) -> list[dict]:
+        """最终去重：按标题Jaccard相似度去除重复论文/新闻"""
+        if len(items) <= 3:
+            return items
+
+        import re
+
+        seen_sigs = set()
+        result = []
+
+        for item in items:
+            title = (item.get("title", "") or "").strip().lower()
+            # 归一化：去除标点，压缩空格
+            sig = re.sub(r'[^\w\s]', '', title)
+            sig = re.sub(r'\s+', ' ', sig).strip()
+
+            if len(sig) < 10:  # 标题太短不参与去重
+                result.append(item)
+                continue
+
+            # 检查是否与已有标题过于相似
+            is_dup = False
+            for seen_sig in seen_sigs:
+                if self._title_similarity(sig, seen_sig) > 0.85:
+                    is_dup = True
+                    break
+
+            if not is_dup:
+                seen_sigs.add(sig)
+                result.append(item)
+
+        if len(items) > len(result):
+            logger.info(f"  [最终去重] 过滤 {len(items) - len(result)} 条重复标题")
+
+        return result
+
+    @staticmethod
+    def _title_similarity(t1: str, t2: str) -> float:
+        """计算两个标题的 Jaccard 相似度（基于词集）"""
+        words1 = set(t1.split())
+        words2 = set(t2.split())
+        if not words1 or not words2:
+            return 0.0
+        intersection = words1 & words2
+        union = words1 | words2
+        return len(intersection) / len(union) if union else 0.0
 
     def _fallback_report(self, papers: list[dict], news: list[dict]) -> str:
         """降级方案：不使用LLM，直接格式化（中文）"""

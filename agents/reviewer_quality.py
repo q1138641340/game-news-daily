@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 class QualityReviewerAgent:
     """质量审查 Agent"""
 
-    SYSTEM_PROMPT = """你是一位质量审查员，负责评估学术和新闻内容的质量。
+    SYSTEM_PROMPT = """你是一位质量审查员，负责评估学术和新闻内容的质量，并检测AI生成/虚构内容。
 
-你的任务是评估每条内容是否达到质量标准，并返回 JSON 格式的审查结果。
+你的任务是评估每条内容是否达到质量标准，识别可能的AI幻觉或编造内容，并返回 JSON 格式的审查结果。
 
 质量标准：
 1. 信息完整性：是否有足够实质内容（不是只有标题）
@@ -31,15 +31,46 @@ class QualityReviewerAgent:
 - 0.3-0.5：较差，排除
 - 0.0-0.3：极差，坚决排除
 
+## 幻觉检测（必须执行）
+
+对每条内容，额外评估以下幻觉风险指标：
+
+1. **DOI 格式检查**：如果有 DOI，检查是否符合标准格式
+   - 期刊 DOI：10.XXXX/xxxxx（如 10.1080/123456）
+   - arXiv DOI：10.48550/arXiv.XXXX.XXXXX
+   - 格式异常的 DOI -> 标记为高风险
+
+2. **作者-论文对应关系**：检查作者列表是否合理
+   - 作者名是否真实人名（非明显乱码或占位符）
+   - 作者数量是否合理（单篇论文通常1-20位作者）
+   - 如果作者全是 "Unknown" 或明显虚构 -> 标记高风险
+
+3. **标题真实性检查**：检查论文/新闻标题是否像编造的
+   - 过于泛泛无具体内容（如仅"Game Research Study"）
+   - 措辞自然度（是否有奇怪的语法或机器生成痕迹）
+   - 标题是否与来源匹配
+
+4. **内容声称检查**：检查摘要/内容中的声称是否有支撑
+   - 是否有具体数据、方法、发现（而非空泛断言）
+   - 内容是否与其他来源可交叉验证
+   - 纯观点性内容标注但不算幻觉
+
+hallucination_risk 取值：
+- "low"：内容可信，各方面检查通过
+- "medium"：存在少量疑点但基本可信
+- "high"：存在明显幻觉/编造迹象
+
 返回 JSON 数组。每条记录必须包含：
 - url: string（原始 URL，用于识别）
 - title: string（标题）
 - quality_score: float（0.0-1.0）
-- approved: boolean（分数 >= 0.5 则为 true）
+- approved: boolean（分数 >= 0.5 且 hallucination_risk != "high" 则为 true）
 - reason: string（评分简要说明）
 - flags: array of strings（如 "clickbait", "advertisement", "incomplete", "opinion"）
+- hallucination_risk: string（"low" | "medium" | "high"）
+- hallucination_details: string（风险的具体说明，low时可省略）
 
-重要：只返回 JSON 数组，不要解释，不要代码块包裹。"""
+重要：只返回 JSON 数组，不要解释，不要代码块包裹。严禁编造审查结果——如果无法判断，标记为 "medium" 并说明原因。"""
 
     def __init__(self, config: dict):
         self.config = config
@@ -119,6 +150,15 @@ class QualityReviewerAgent:
                     item["approved"] = reviewed.get("approved", False)
                     item["reason"] = reviewed.get("reason", "")
                     item["quality_flags"] = reviewed.get("flags", [])
+                    # 幻觉检测字段
+                    item["hallucination_risk"] = reviewed.get("hallucination_risk", "low")
+                    item["hallucination_details"] = reviewed.get("hallucination_details", "")
+
+                    # 高风险幻觉 -> 强制不通过
+                    if item.get("hallucination_risk") == "high":
+                        item["approved"] = False
+                        detail = item.get("hallucination_details", "检测到AI编造/虚构内容")
+                        item["reason"] = (item.get("reason", "") + f" [高风险幻觉: {detail}]")
                 else:
                     # 没有对应的审查结果，默认通过
                     item["quality_score"] = 0.5

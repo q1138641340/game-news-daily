@@ -1,9 +1,9 @@
 name: game-news-daily
 
 on:
-  # 定时运行：每天 UTC 00:00（北京时间 08:00）
+  # 定时运行：每天 UTC 18:30（北京时间 02:30）
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '30 18 * * *'
 
   # 允许手动触发
   workflow_dispatch:
@@ -42,6 +42,24 @@ jobs:
 
       - name: Create output directory
         run: mkdir -p output
+
+      - name: Load cross-day dedup cache from vault
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          mkdir -p output/.cache
+          HTTP_CODE=$(curl -s -o output/.cache/seen_items.json \
+            -w "%{http_code}" \
+            -H "Authorization: token $GH_PAT" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/${{ env.TARGET_REPO }}/contents/${{ env.TARGET_PATH }}/.cache/seen_items.json?ref=${{ env.TARGET_BRANCH }}" \
+            2>/dev/null || echo "000")
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Loaded dedup cache from vault repo"
+          else
+            echo "ℹ️ No existing dedup cache (HTTP $HTTP_CODE), starting fresh"
+            rm -f output/.cache/seen_items.json
+          fi
 
       - name: Run workflow
         env:
@@ -90,6 +108,12 @@ jobs:
           # 创建目标目录并复制日期文件夹内容
           mkdir -p "/tmp/vault/${{ env.TARGET_PATH }}"
           cp -r "$DATE_DIR" "/tmp/vault/${{ env.TARGET_PATH }}/"
+
+          # 也复制去重缓存文件（用于下次运行的跨天去重）
+          if [ -d "output/.cache" ]; then
+            mkdir -p "/tmp/vault/${{ env.TARGET_PATH }}/.cache"
+            cp -r output/.cache/* "/tmp/vault/${{ env.TARGET_PATH }}/.cache/"
+          fi
 
           # 提交并推送
           cd /tmp/vault

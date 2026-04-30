@@ -48,8 +48,9 @@ class AcademicCollectorAgent:
 
 重要：只返回JSON数组，不要解释，不要代码块包裹。"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, dedup_cache=None):
         self.config = config
+        self.dedup_cache = dedup_cache
         self.mm_client, self.mm_model = get_collect_minimax()
         self.ds_client, self.ds_model = get_collect_deepseek_flash()
         self.session = requests.Session()
@@ -336,9 +337,19 @@ class AcademicCollectorAgent:
         return unique
 
     def _clean_with_llm(self, papers: list[dict]) -> list[dict]:
-        """使用LLM清洗和评估论文（MiniMax）"""
+        """使用LLM清洗和评估论文（MiniMax），含跨天去重"""
         if not papers:
             return papers
+
+        # 跨天去重检查
+        if self.dedup_cache:
+            papers, duped = self.dedup_cache.filter_seen(papers)
+            if duped:
+                logger.info(f"        [学术跨天去重] 过滤 {len(duped)} 篇历史重复")
+
+        if not papers:
+            return papers
+
         try:
             input_data = str(papers[:50])
             result = self.mm_client.chat_json(

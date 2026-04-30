@@ -34,8 +34,9 @@ Return a JSON array. Each item must have:
 
 IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, dedup_cache=None):
         self.config = config
+        self.dedup_cache = dedup_cache
         self.scraper = WebScraper(
             timeout=config.get("workflow", {}).get("collect", {}).get("timeout_seconds", 30)
         )
@@ -47,20 +48,26 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
         all_raw = []
 
         # 步骤1: RSS 订阅
-        logger.info("  [1/3] RSS 订阅源...")
+        logger.info("  [1/4] RSS 订阅源...")
         rss_items = self._collect_rss()
         all_raw.extend(rss_items)
         logger.info(f"        RSS 获取 {len(rss_items)} 条")
 
         # 步骤2: 主动搜索
-        logger.info("  [2/3] 主动搜索新闻...")
+        logger.info("  [2/4] 主动搜索新闻...")
         search_items = self._search_news()
         all_raw.extend(search_items)
         logger.info(f"        搜索获取 {len(search_items)} 条")
 
         # 步骤3: 爬取搜索结果中的网页（深度内容）
-        logger.info("  [3/3] 爬取详细内容...")
+        logger.info("  [3/4] 爬取详细内容...")
         enriched = self._enrich_with_content(all_raw)
+
+        # 步骤4: Hacker News 搜索
+        logger.info("  [4/4] Hacker News 搜索...")
+        hn_items = self._search_hn()
+        enriched.extend(hn_items)
+        logger.info(f"        HN 获取 {len(hn_items)} 条")
 
         # 去重和清洗
         cleaned = self._deduplicate(enriched)
@@ -136,6 +143,53 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
 
         return items
 
+    def _search_hn(self) -> list[dict]:
+        """通过 Hacker News Algolia API 搜索游戏相关内容"""
+        import requests as req
+        import time as t
+        from datetime import datetime as dt
+
+        hn_queries = self.config.get("hn_keywords", [
+            "game design", "game studies", "game narrative",
+            "game development", "video game history", "game AI",
+            "interactive storytelling", "ludology"
+        ])
+
+        items = []
+        cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+
+        for query in hn_queries:
+            try:
+                url = "https://hn.algolia.com/api/v1/search"
+                params = {
+                    "query": query,
+                    "tags": "story",
+                    "hitsPerPage": 3,
+                    "numericFilters": "created_at_i>" + str(int(
+                        (dt.now(timezone.utc) - timedelta(days=7)).timestamp()
+                    ))
+                }
+                resp = req.get(url, params=params, timeout=10)
+                resp.raise_for_status()
+                data = resp.json()
+
+                for hit in data.get("hits", []):
+                    pub_date = hit.get("created_at", "")[:10]
+                    item = {
+                        "title": hit.get("title", ""),
+                        "summary": (hit.get("story_text") or "")[:300],
+                        "source": f"Hacker News (points: {hit.get('points', 0)}, comments: {hit.get('num_comments', 0)})",
+                        "url": hit.get("url") or f"https://news.ycombinator.com/item?id={hit.get('objectID')}",
+                        "date": pub_date,
+                        "category": "pending"
+                    }
+                    items.append(item)
+                t.sleep(1.5)  # HN API 礼貌延迟
+            except Exception as e:
+                logger.warning(f"        [HN搜索失败] {query}: {e}")
+
+        return items
+
     def _enrich_with_content(self, items: list[dict]) -> list[dict]:
         """爬取搜索结果中的网页，获取更详细的内容"""
         # 只爬取摘要太短的条目
@@ -165,11 +219,11 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
         return items
 
     def _deduplicate(self, items: list[dict]) -> list[dict]:
-        """使用LLM去重和清洗"""
+        """使用LLM去重和清洗（含跨天去重）"""
         if not items:
             return []
 
-        # URL去重（简单去重先执行）
+        # 第1层：URL去重（简单去重先执行）
         seen_urls = set()
         url_unique = []
         for item in items:
@@ -178,10 +232,20 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
                 seen_urls.add(url)
                 url_unique.append(item)
 
+        # 第2层：跨天去重检查
+        if self.dedup_cache:
+            url_unique, duped = self.dedup_cache.filter_seen(url_unique)
+            if duped:
+                logger.info(f"        [跨天去重] 过滤 {len(duped)} 条历史重复")
+
         if len(url_unique) <= 5:
             return url_unique  # 太少不需要LLM去重
 
-        # LLM 去重和分类
+        # 第3层：语义相似度去重（数量较多时执行）
+        if len(url_unique) > 10:
+            url_unique = self._semantic_deduplicate(url_unique)
+
+        # 第4层：LLM 去重和分类
         try:
             input_data = str(url_unique[:100])  # 限制数量避免token溢出
             result = self.llm.chat_json(
@@ -196,6 +260,40 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
             logger.warning(f"        [LLM清洗失败，使用原始数据]: {e}")
 
         return url_unique
+
+    def _semantic_deduplicate(self, items: list[dict]) -> list[dict]:
+        """使用LLM进行语义相似度去重（同一事件不同来源）"""
+        try:
+            import re
+
+            comparisons = []
+            for item in items:
+                title = item.get("title", "")[:300]
+                summary = (item.get("summary", "") or "")[:200]
+                comparisons.append(f"URL: {item.get('url', '')}\n标题: {title}\n摘要: {summary}")
+
+            result = self.llm.chat_json(
+                system_prompt="""You are a deduplication assistant. Given a list of news items,
+identify groups that report the SAME event/story from different sources (semantic duplicates).
+Return JSON: {"duplicate_urls": ["url1", "url2", ...]} containing URLs to remove (keep the first/best one).
+Be conservative - only flag items that are clearly the same story.
+IMPORTANT: Return ONLY valid JSON, no code blocks.""",
+                user_message="Find semantic duplicates (same story, different sources):\n" + "\n---\n".join(comparisons),
+                model=self.model,
+                temperature=0.0
+            )
+
+            if isinstance(result, dict) and "duplicate_urls" in result:
+                dup_urls = set(result["duplicate_urls"])
+                if dup_urls:
+                    filtered = [item for item in items if item.get("url", "") not in dup_urls]
+                    if len(filtered) < len(items):
+                        logger.info(f"        [语义去重] 过滤 {len(items) - len(filtered)} 条相似内容")
+                    return filtered
+        except Exception as e:
+            logger.warning(f"        [语义去重失败，跳过]: {e}")
+
+        return items
 
     @staticmethod
     def _parse_date(entry) -> Optional[datetime]:
