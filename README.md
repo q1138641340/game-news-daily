@@ -8,7 +8,9 @@
 - **智能过滤**: 使用 LLM 进行质量审查和相关性评估
 - **日报生成**: 自动生成格式化的 Markdown 日报
 - **PDF 下载**: 自动下载开放获取的论文 PDF
-- **定时运行**: 支持 GitHub Actions 每天早上 8 点自动运行
+- **反幻觉检测**: 质量审查中集成 AI 幻觉检测（DOI验证、作者真实性、标题自然度检查）
+- **跨天去重**: 90天缓存防止内容重复收录
+- **定时运行**: 支持 GitHub Actions 每天凌晨 2:30（北京时间）自动运行
 
 ## 快速开始
 
@@ -36,7 +38,7 @@ python main.py
 
 ### GitHub Actions 自动运行
 
-本项目已配置 GitHub Actions，每天早上 8 点（北京时间）自动运行:
+本项目已配置 GitHub Actions，每天凌晨 2:30（北京时间）自动运行:
 
 1. Fork 本仓库
 2. 在仓库 Settings -> Secrets and variables -> Actions 中添加以下 secrets:
@@ -82,6 +84,7 @@ git clone https://github.com/sunjinghe/github-obsidian-vault.git "你的 Obsidia
 │   ├── web_scraper.py      # 网页爬虫
 │   ├── pdf_downloader.py   # PDF 下载
 │   ├── obsidian.py         # Obsidian 写入
+│   ├── dedup_cache.py      # 跨天去重缓存
 │   └── llm.py              # LLM 客户端
 ├── .github/workflows/      # GitHub Actions 配置
 │   └── daily.yml           # 定时工作流
@@ -109,7 +112,8 @@ Research Feed/
 
 - `search_keywords`: 新闻搜索关键词
 - `academic_keywords`: 学术论文搜索关键词
-- `rss_feeds`: RSS 订阅源
+- `rss_feeds`: RSS 订阅源（含学术期刊、游戏媒体、行业来源、Reddit 社交媒体）
+- `hn_keywords`: Hacker News 搜索关键词
 - `workflow`: 工作流参数（收集数量、审查阈值等）
 - `obsidian`: Obsidian vault 路径和输出文件夹
 

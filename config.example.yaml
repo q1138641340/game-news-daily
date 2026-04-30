@@ -95,6 +95,48 @@ rss_feeds:
   - name: "36Kr 游戏资讯"
     url: "https://36kr.com/feed"
 
+  # ========== 新增学术期刊 RSS ==========
+  - name: "Journal of Gaming & Virtual Worlds"
+    url: "https://www.intellectbooks.com/journal-of-gaming-virtual-worlds"
+  - name: "Eludamos: Journal for Computer Game Culture"
+    url: "https://eludamos.org/index.php/eludamos/gateway/plugin/WebFeedGatewayPlugin/atom"
+  - name: "Simulation & Gaming (SAGE)"
+    url: "https://journals.sagepub.com/action/gsaRSS?journalName=Simulation+%26+Gaming"
+  - name: "Press Start"
+    url: "https://press-start.gla.ac.uk/index.php/press-start/gateway/plugin/WebFeedGatewayPlugin/atom"
+  - name: "Analog Game Studies"
+    url: "https://analoggamestudies.org/feed/"
+
+  # ========== 新增游戏媒体 RSS ==========
+  - name: "Eurogamer"
+    url: "https://www.eurogamer.net/feed"
+  - name: "Polygon"
+    url: "https://www.polygon.com/rss/index.xml"
+  - name: "Kotaku"
+    url: "https://kotaku.com/rss"
+  - name: "PC Gamer"
+    url: "https://www.pcgamer.com/rss/"
+  - name: "IGN"
+    url: "https://www.ign.com/rss"
+
+  # ========== 新增行业来源 RSS ==========
+  - name: "Game Developer (ex-Gamasutra)"
+    url: "https://www.gamedeveloper.com/rss"
+  - name: "GDC (YouTube Channel)"
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC0JB7TSe49lg4u5nf16n1NA"
+
+  # ========== 新增社交媒体 RSS（Reddit） ==========
+  - name: "Reddit r/gamedev"
+    url: "https://www.reddit.com/r/gamedev/.rss"
+  - name: "Reddit r/ludology"
+    url: "https://www.reddit.com/r/ludology/.rss"
+  - name: "Reddit r/gamestudies"
+    url: "https://www.reddit.com/r/gamestudies/.rss"
+  - name: "Reddit r/truegaming"
+    url: "https://www.reddit.com/r/truegaming/.rss"
+  - name: "Reddit r/GameDesign"
+    url: "https://www.reddit.com/r/GameDesign/.rss"
+
 # 工作流配置
 workflow:
   collect:
@@ -112,5 +154,16 @@ workflow:
     max_items_per_report: 50
     include_pdf_download: true
 
-# 定时运行（北京时间 20:00）
-schedule: "0 20 * * *"
+# Hacker News 搜索关键词
+hn_keywords:
+  - "game design"
+  - "game studies"
+  - "game narrative"
+  - "game development"
+  - "video game history"
+  - "game AI"
+  - "interactive storytelling"
+  - "ludology"
+
+# 定时运行（北京时间 02:30 = UTC 18:30）
+schedule: "30 18 * * *"
