@@ -17,7 +17,7 @@ import hashlib
 import re
 import logging
 from datetime import datetime, timedelta
-from urllib.parse import urlparse, urlunparse, parse_qs
+from urllib.parse import urlparse, urlunparse
 
 logger = logging.getLogger(__name__)
 
