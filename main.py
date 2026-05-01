@@ -302,9 +302,8 @@ def main():
                 logger.info("Updated report with failed downloads")
 
         # ============================================================
-        # Phase 6.5: 保存跨天去重缓存
+        # Phase 6.5: 保存跨天去重缓存（agents 已在 Phase 1 标记原始条目）
         # ============================================================
-        dedup_cache.mark_batch_seen(final_items)
         dedup_cache.save(cache_path)
         logger.info("[Phase 6.5] Cross-day dedup cache saved")
 

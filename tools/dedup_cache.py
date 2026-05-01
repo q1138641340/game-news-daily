@@ -17,6 +17,7 @@ import hashlib
 import re
 import logging
 from datetime import datetime, timedelta
+from urllib.parse import urlparse, urlunparse, parse_qs
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +69,8 @@ class DedupCache:
                     f"{len(self.dois)} DOIs, {len(self.title_hashes)} title hashes")
 
     def is_seen_url(self, url: str) -> bool:
-        """检查 URL 是否已收录"""
-        return url.strip().lower() in self.urls
+        """检查 URL 是否已收录（归一化后比较）"""
+        return self._normalize_url(url) in self.urls
 
     def is_seen_doi(self, doi: str) -> bool:
         """检查 DOI 是否已收录"""
@@ -83,10 +84,11 @@ class DedupCache:
         return h in self.title_hashes
 
     def mark_seen(self, item: dict) -> int:
-        """标记一条内容为已收录。返回新增标记数（0-3）"""
+        """标记一条内容为已收录（URL 归一化后存储）。返回新增标记数（0-3）"""
         today = datetime.now().strftime("%Y-%m-%d")
         count = 0
-        url = (item.get("url") or "").strip().lower()
+        raw_url = (item.get("url") or "").strip()
+        url = self._normalize_url(raw_url) if raw_url else ""
         doi = (item.get("doi") or "").strip().lower()
         title = (item.get("title") or "").strip()
 
@@ -111,11 +113,12 @@ class DedupCache:
         logger.info(f"  [去重缓存] 新增 {total} 条标记")
 
     def filter_seen(self, items: list[dict]) -> tuple[list[dict], list[dict]]:
-        """过滤已收录的条目，返回 (未收录条目, 已收录条目)"""
+        """过滤已收录的条目（URL 归一化后比较），返回 (未收录条目, 已收录条目)"""
         fresh = []
         seen = []
         for item in items:
-            url = (item.get("url") or "").strip().lower()
+            raw_url = (item.get("url") or "").strip()
+            url = self._normalize_url(raw_url) if raw_url else ""
             doi = (item.get("doi") or "").strip().lower()
             title = (item.get("title") or "").strip()
 
@@ -128,6 +131,46 @@ class DedupCache:
         if seen:
             logger.info(f"  [去重缓存] 跨天过滤 {len(seen)} 条重复内容")
         return fresh, seen
+
+    # 追踪/营销参数黑名单
+    _TRACKING_PARAMS = {
+        'utm_source', 'utm_medium', 'utm_campaign', 'utm_term',
+        'utm_content', 'utm_id', 'fbclid', 'gclid', 'gclsrc',
+        'ref', 'source', 'mc_cid', 'mc_eid', 'pk_campaign',
+        'pk_source', 'pk_medium', 'igshid', 'twclid',
+        'at_campaign', 'at_medium', 's_kwcid', 'yclid',
+        'oly_anon_id', 'oly_enc_id', '_ga', '_gl',
+        'trk', 'campaign_id', 'hss_channel', 'utm_custom',
+    }
+
+    @staticmethod
+    def _normalize_url(url: str) -> str:
+        """URL 归一化：去追踪参数、去尾部斜杠、去 www、统一协议和大小写"""
+        if not url:
+            return ""
+        url = url.strip().lower()
+        try:
+            parsed = urlparse(url)
+        except Exception:
+            return url
+        # 统一 http→https
+        scheme = 'https' if parsed.scheme in ('http', 'https') else parsed.scheme
+        # 移除 www 前缀
+        netloc = parsed.netloc
+        if netloc.startswith('www.'):
+            netloc = netloc[4:]
+        # 移除追踪参数
+        if parsed.query:
+            qs_pairs = parsed.query.split('&')
+            clean = [p for p in qs_pairs
+                     if '=' in p and p.split('=', 1)[0].lower() not in DedupCache._TRACKING_PARAMS]
+            query = '&'.join(sorted(clean)) if clean else ''
+        else:
+            query = ''
+        # 去尾部斜杠
+        path = parsed.path.rstrip('/')
+        normalized = urlunparse((scheme, netloc, path, parsed.params, query, ''))
+        return normalized
 
     @staticmethod
     def _hash_title(title: str) -> str:

@@ -346,6 +346,8 @@ class AcademicCollectorAgent:
             papers, duped = self.dedup_cache.filter_seen(papers)
             if duped:
                 logger.info(f"        [学术跨天去重] 过滤 {len(duped)} 篇历史重复")
+            # 关键：立即用原始 URL/DOI/标题标记缓存，防止 LLM 转换后标识符变化
+            self.dedup_cache.mark_batch_seen(papers)
 
         if not papers:
             return papers

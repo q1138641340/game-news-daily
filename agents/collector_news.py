@@ -237,12 +237,14 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
             url_unique, duped = self.dedup_cache.filter_seen(url_unique)
             if duped:
                 logger.info(f"        [跨天去重] 过滤 {len(duped)} 条历史重复")
+            # 关键：立即用原始 URL/标题标记缓存，防止 LLM 转换后标识符变化
+            self.dedup_cache.mark_batch_seen(url_unique)
 
         if len(url_unique) <= 5:
             return url_unique  # 太少不需要LLM去重
 
-        # 第3层：语义相似度去重（数量较多时执行）
-        if len(url_unique) > 10:
+        # 第3层：语义相似度去重（>=6条时执行）
+        if len(url_unique) > 5:
             url_unique = self._semantic_deduplicate(url_unique)
 
         # 第4层：LLM 去重和分类
