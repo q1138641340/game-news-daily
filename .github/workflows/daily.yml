@@ -110,7 +110,7 @@ jobs:
           cp -r "$DATE_DIR" "/tmp/vault/${{ env.TARGET_PATH }}/"
 
           # 也复制去重缓存文件（用于下次运行的跨天去重）
-          if [ -d "output/.cache" ]; then
+          if [ -d "output/.cache" ] && [ "$(ls -A output/.cache)" ]; then
             mkdir -p "/tmp/vault/${{ env.TARGET_PATH }}/.cache"
             cp -r output/.cache/* "/tmp/vault/${{ env.TARGET_PATH }}/.cache/"
           fi
