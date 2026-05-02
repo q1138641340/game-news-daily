@@ -180,10 +180,76 @@ Top 3 必读条目：
                 temperature=0.4,
                 max_tokens=16000
             )
+            # 后处理：追加战略增强内容（不改动原有结构）
+            report = self._add_strategic_enhancements(report, papers, news)
             return report
         except Exception as e:
             logger.warning(f"  [LLM生成失败]: {e}")
             return self._fallback_report(papers, news)
+
+    def _add_strategic_enhancements(self, report: str, papers: list[dict], news: list[dict]) -> str:
+        """
+        在日报末尾追加三项战略增强内容，不改动原有结构。
+        """
+        if not report or len(report.strip()) < 100:
+            return report
+
+        ENHANCEMENT_SYSTEM = """你是一位战略分析专家，负责为学术日报追加批判性增强内容。
+严格遵循用户的三项要求，输出必须全部使用中文。"""
+
+        all_titles = [p.get("title", "") for p in papers] + [n.get("title", "") for n in news]
+        all_abstracts = (
+            [p.get("clean_content", "") or p.get("summary", "") for p in papers] +
+            [n.get("clean_content", "") or n.get("summary", "") for n in news]
+        )
+        paper_count = len(papers)
+        news_count = len(news)
+
+        user_msg = f"""以下是一份学术日报的原文，请在末尾追加三项战略增强内容，**绝对不要改动原文**。
+
+---日报原文开始---
+{report}
+---日报原文结束---
+
+今日数据：{paper_count} 篇论文，{news_count} 条新闻。
+
+请严格按以下三项要求输出：
+
+**要求一（核心张力声明）**
+在执行摘要的末尾追加一行，格式为：
+"本日报追踪到的最核心的结构性张力在于：……"
+要求：必须是对今日内容中浮现的深层矛盾或两条相反逻辑的凝练，必须具有可跨期追踪的理论潜力，避免泛泛而谈。直接给出这句话即可，不需要前缀说明。
+
+**要求二（反向思考）**
+在"趋势与关联分析"部分的"值得关注的新趋势"中，为每一条趋势追加一个"然而"段，格式为：
+"然而，这一趋势的潜在局限/风险/反例在于：……"
+要求：必须是对该趋势可能失败、被夸大或存在盲区的批判性思考，需有实质内容，不可仅为措辞性否定。每条趋势都要追加。
+
+**要求三（本周研究路径）**
+将"推荐阅读"升级为"本周研究路径"，格式如下：
+**本周研究路径：【路径标题】**
+1. 先读《…》（说明阅读目的）。
+2. 再读《…》（说明如何在第一条基础上深化）。
+3. 最后读《…》（说明如何整合前三者）。
+**核心研讨问题**：提出1个能够串联所有推荐内容的深度问题。
+
+输出格式：
+在日报原文之后，插入分隔线"**以下为战略增强内容**"，然后依次输出上述三项内容。不要重复日报原文，只输出增强内容。"""
+
+        try:
+            enhancements = self.llm.chat(
+                system_prompt=ENHANCEMENT_SYSTEM,
+                user_message=user_msg,
+                model=self.model,
+                temperature=0.5,
+                max_tokens=8000
+            )
+            if enhancements and len(enhancements.strip()) > 50:
+                return f"{report.strip()}\n\n---\n\n**以下为战略增强内容**\n\n{enhancements.strip()}"
+        except Exception as e:
+            logger.warning(f"  [战略增强生成失败]: {e}")
+
+        return report
 
     def _empty_report(self) -> str:
         """空日报"""
