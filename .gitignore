@@ -25,7 +25,7 @@ Thumbs.db
 raw_data/
 
 # GitHub Actions 产物（PDF 不推送）
-output/papers/*.pdf
+output/**/Papers/*.pdf
 
 # Obsidian 配置（绝对禁止追踪）
 .obsidian/
