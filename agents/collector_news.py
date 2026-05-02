@@ -101,15 +101,12 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
 
                     item = {
                         "title": entry.get("title", ""),
-                        "summary": entry.get("summary", "")[:500],
+                        "summary": self.scraper._clean_markdown(entry.get("summary", ""))[:500],
                         "source": feed_config.get("name", feed.feed.get("title", "")),
                         "url": entry.get("link", ""),
                         "date": pub_date.strftime("%Y-%m-%d") if pub_date else "",
                         "category": "pending"
                     }
-
-                    # 清理HTML标签
-                    item["summary"] = self.scraper._clean_markdown(item["summary"])
 
                     all_items.append(item)
                     count += 1

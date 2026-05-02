@@ -160,15 +160,15 @@ hallucination_risk 取值：
                         detail = item.get("hallucination_details", "检测到AI编造/虚构内容")
                         item["reason"] = (item.get("reason", "") + f" [高风险幻觉: {detail}]")
                 else:
-                    # 没有对应的审查结果，默认通过
-                    item["quality_score"] = 0.5
-                    item["approved"] = True
+                    # 没有对应的审查结果，默认拒绝（fail-closed）
+                    item["quality_score"] = 0.0
+                    item["approved"] = False
                     item["reason"] = "No review result"
         else:
-            # 解析失败，默认全部通过
+            # 解析失败，默认全部拒绝（fail-closed）
             for item in batch:
-                item["quality_score"] = 0.5
-                item["approved"] = True
+                item["quality_score"] = 0.0
+                item["approved"] = False
                 item["reason"] = "Parse error"
 
         return batch

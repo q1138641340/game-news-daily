@@ -6,6 +6,7 @@
 from tools.llm import get_collect_deepseek, get_collect_minimax
 from tools.json_parser import parse_json
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +182,6 @@ class PreprocessorAgent:
 
     def _fetch_arxiv_api(self, arxiv_id: str) -> str:
         """通过 arXiv API 获取摘要（绕过爬虫）"""
-        import time
         try:
             url = f"http://export.arxiv.org/api/query?id_list={arxiv_id}"
             resp = requests.get(url, timeout=15)

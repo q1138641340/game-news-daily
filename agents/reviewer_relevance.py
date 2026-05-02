@@ -230,17 +230,17 @@ class RelevanceReviewerAgent:
                     item["needs_verification"] = reviewed.get("needs_verification", False)
                     item["verification_sources"] = reviewed.get("verification_sources", [])
                 else:
-                    item["relevance_score"] = 0.5
-                    item["priority"] = "medium"
-                    item["approved"] = True
+                    item["relevance_score"] = 0.0
+                    item["priority"] = "low"
+                    item["approved"] = False
                     item["interest_areas"] = []
                     item["reason"] = "No review result"
                     item["needs_verification"] = False
         else:
             for item in batch:
-                item["relevance_score"] = 0.5
-                item["priority"] = "medium"
-                item["approved"] = True
+                item["relevance_score"] = 0.0
+                item["priority"] = "low"
+                item["approved"] = False
                 item["interest_areas"] = []
                 item["reason"] = "Parse error"
                 item["needs_verification"] = False
