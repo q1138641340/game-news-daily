@@ -245,7 +245,7 @@ Top 3 必读条目：
                 max_tokens=8000
             )
             if enhancements and len(enhancements.strip()) > 50:
-                return f"{report.strip()}\n\n---\n\n**以下为战略增强内容**\n\n{enhancements.strip()}"
+                return f"{report.strip()}\n\n---\n\n{enhancements.strip()}"
         except Exception as e:
             logger.warning(f"  [战略增强生成失败]: {e}")
 
