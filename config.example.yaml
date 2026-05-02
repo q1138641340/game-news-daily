@@ -96,8 +96,6 @@ rss_feeds:
     url: "https://36kr.com/feed"
 
   # ========== 新增学术期刊 RSS ==========
-  - name: "Journal of Gaming & Virtual Worlds"
-    url: "https://www.intellectbooks.com/journal-of-gaming-virtual-worlds"
   - name: "Eludamos: Journal for Computer Game Culture"
     url: "https://eludamos.org/index.php/eludamos/gateway/plugin/WebFeedGatewayPlugin/atom"
   - name: "Simulation & Gaming (SAGE)"

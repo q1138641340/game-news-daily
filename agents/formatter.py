@@ -197,11 +197,6 @@ Top 3 必读条目：
         ENHANCEMENT_SYSTEM = """你是一位战略分析专家，负责为学术日报追加批判性增强内容。
 严格遵循用户的三项要求，输出必须全部使用中文。"""
 
-        all_titles = [p.get("title", "") for p in papers] + [n.get("title", "") for n in news]
-        all_abstracts = (
-            [p.get("clean_content", "") or p.get("summary", "") for p in papers] +
-            [n.get("clean_content", "") or n.get("summary", "") for n in news]
-        )
         paper_count = len(papers)
         news_count = len(news)
 
