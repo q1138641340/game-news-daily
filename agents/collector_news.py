@@ -242,7 +242,7 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
 
         # 第3层：语义相似度去重（>=6条时执行）
         if len(url_unique) > 5:
-            url_unique = self._semantic_deduplicate(url_unique)
+            url_unique, duped_items = self._semantic_deduplicate(url_unique, self.dedup_cache)
 
         # 第4层：LLM 去重和分类
         try:
@@ -254,14 +254,20 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
                 temperature=0.1
             )
             if isinstance(result, list):
+                # LLM清洗完成后，标记通过的去重项（防止同日后续出现）
+                if self.dedup_cache:
+                    self.dedup_cache.mark_batch_seen(result)
                 return result
         except Exception as e:
             logger.warning(f"        [LLM清洗失败，使用原始数据]: {e}")
+            if self.dedup_cache:
+                self.dedup_cache.mark_batch_seen(url_unique)
 
         return url_unique
 
-    def _semantic_deduplicate(self, items: list[dict]) -> list[dict]:
-        """使用LLM进行语义相似度去重（同一事件不同来源）"""
+    def _semantic_deduplicate(self, items: list[dict], dedup_cache) -> tuple[list[dict], list[dict]]:
+        """使用LLM进行语义相似度去重（同一事件不同来源）
+        返回 (保留项, 被移除项)"""
         try:
             import re
 
@@ -286,13 +292,17 @@ IMPORTANT: Return ONLY valid JSON, no code blocks.""",
                 dup_urls = set(result["duplicate_urls"])
                 if dup_urls:
                     filtered = [item for item in items if item.get("url", "") not in dup_urls]
+                    removed = [item for item in items if item.get("url", "") in dup_urls]
                     if len(filtered) < len(items):
                         logger.info(f"        [语义去重] 过滤 {len(items) - len(filtered)} 条相似内容")
-                    return filtered
+                    # 标记被移除的条目到缓存，防止后续重复出现
+                    if removed and dedup_cache:
+                        dedup_cache.mark_batch_seen(removed)
+                    return filtered, removed
         except Exception as e:
             logger.warning(f"        [语义去重失败，跳过]: {e}")
 
-        return items
+        return items, []
 
     @staticmethod
     def _parse_date(entry) -> Optional[datetime]:
