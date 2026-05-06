@@ -136,28 +136,28 @@ rss_feeds:
   - name: "Reddit r/GameDesign"
     url: "https://www.reddit.com/r/GameDesign/.rss"
 
-  # ========== 社交媒体 RSS（RSSHub: X/Twitter） ==========
-  # RSSHub 公共实例: https://rsshub.app
+  # ========== 社交媒体 RSS（Nitter: X/Twitter） ==========
+  # Nitter: 开源 Twitter 前端，生成 RSS
   - name: "X - GameSpot"
-    url: "https://rsshub.app/twitter/user/GameSpot"
+    url: "https://nitter.net/GameSpot/rss"
   - name: "X - Kotaku"
-    url: "https://rsshub.app/twitter/user/Kotaku"
+    url: "https://nitter.net/Kotaku/rss"
   - name: "X - GameInformer"
-    url: "https://rsshub.app/twitter/user/GameInformer"
+    url: "https://nitter.net/GameInformer/rss"
   - name: "X - game developer"
-    url: "https://rsshub.app/twitter/user/gamedeveloper"
+    url: "https://nitter.net/gamedevnet/rss"
   - name: "X - Game Industry Biz"
-    url: "https://rsshub.app/twitter/user/GameIndustry_BI"
+    url: "https://nitter.net/GIBiz/rss"
   - name: "X - Wired"
-    url: "https://rsshub.app/twitter/user/Wired"
+    url: "https://nitter.net/Wired/rss"
   - name: "X - MIT Media Lab"
-    url: "https://rsshub.app/twitter/user/MITMediaLab"
+    url: "https://nitter.net/medialab/rss"
   - name: "X - PlayStation"
-    url: "https://rsshub.app/twitter/user/PlayStation"
+    url: "https://nitter.net/PlayStation/rss"
   - name: "X - Xbox"
-    url: "https://rsshub.app/twitter/user/Xbox"
+    url: "https://nitter.net/Xbox/rss"
   - name: "X - gameinformerbackup"
-    url: "https://rsshub.app/twitter/user/gameinformer"
+    url: "https://nitter.net/gameinformer/rss"
 
 # 工作流配置
 workflow:
