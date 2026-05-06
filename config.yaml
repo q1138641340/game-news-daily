@@ -210,6 +210,14 @@ rss_feeds:
     url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1644114654"
   - name: "微博 - 三联生活周刊"
     url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1191965271"
+  - name: "微博 - 人民日报"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2803301701"
+  - name: "微博 - 央视新闻"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2656274875"
+  - name: "微博 - 李开复"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1197161814"
+  - name: "微博 - 交个朋友直播间"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1640571365"
 
   # ========== 社交媒体 RSS（Nitter: X/Twitter） ==========
   # Nitter: 开源 Twitter 前端，生成 RSS
