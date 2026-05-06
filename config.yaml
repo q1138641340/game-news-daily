@@ -166,6 +166,13 @@ rss_feeds:
   - name: "微博 - 新浪游戏"
     url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/517656716"
 
+  - name: "微博 - 游研社"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2634877355"
+  - name: "微博 - 天美工作室群"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/5661907178"
+  - name: "微博 - 鹰角网络"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/7461423907"
+
   # ========== 社交媒体 RSS（Nitter: X/Twitter） ==========
   # Nitter: 开源 Twitter 前端，生成 RSS
   - name: "X - GameSpot"
