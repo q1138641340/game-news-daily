@@ -141,7 +141,7 @@ rss_feeds:
   - name: "GDC (YouTube Channel)"
     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC0JB7TSe49lg4u5nf16n1NA"
 
-  # ========== 新增社交媒体 RSS（Reddit） ==========
+  # ========== 社交媒体 RSS（Reddit） ==========
   - name: "Reddit r/gamedev"
     url: "https://www.reddit.com/r/gamedev/.rss"
   - name: "Reddit r/ludology"
@@ -152,6 +152,63 @@ rss_feeds:
     url: "https://www.reddit.com/r/truegaming/.rss"
   - name: "Reddit r/GameDesign"
     url: "https://www.reddit.com/r/GameDesign/.rss"
+
+  # ========== 社交媒体 RSS（RSSHub: X/Twitter） ==========
+  # RSSHub 公共实例: https://rsshub.app
+  - name: "X - GameSpot"
+    url: "https://rsshub.app/twitter/user/GameSpot"
+  - name: "X - Kotaku"
+    url: "https://rsshub.app/twitter/user/Kotaku"
+  - name: "X - GameInformer"
+    url: "https://rsshub.app/twitter/user/GameInformer"
+  - name: "X - game developer"
+    url: "https://rsshub.app/twitter/user/gamedeveloper"
+  - name: "X - Game Industry Biz"
+    url: "https://rsshub.app/twitter/user/GameIndustry_BI"
+  - name: "X - Wired"
+    url: "https://rsshub.app/twitter/user/Wired"
+  - name: "X - MIT Media Lab"
+    url: "https://rsshub.app/twitter/user/MITMediaLab"
+  - name: "X - PlayStation"
+    url: "https://rsshub.app/twitter/user/PlayStation"
+  - name: "X - Xbox"
+    url: "https://rsshub.app/twitter/user/Xbox"
+  - name: "X - gameinformerbackup"
+    url: "https://rsshub.app/twitter/user/gameinformer"
+
+  # ========== 社交媒体 RSS（RSSHub: 小红书关键词） ==========
+  # 游戏研究类
+  - name: "小红书 - 游戏叙事"
+    url: "https://rsshub.app/xiaohongshu/keyword/游戏叙事"
+  - name: "小红书 - 游戏研究"
+    url: "https://rsshub.app/xiaohongshu/keyword/游戏研究"
+  - name: "小红书 - 叙事设计"
+    url: "https://rsshub.app/xiaohongshu/keyword/叙事设计"
+  - name: "小红书 - 独立游戏"
+    url: "https://rsshub.app/xiaohongshu/keyword/独立游戏"
+  - name: "小红书 - 赛博美学"
+    url: "https://rsshub.app/xiaohongshu/keyword/赛博美学"
+  - name: "小红书 - 游戏化学习"
+    url: "https://rsshub.app/xiaohongshu/keyword/游戏化学习"
+  - name: "小红书 - 互动叙事"
+    url: "https://rsshub.app/xiaohongshu/keyword/互动叙事"
+  # 游戏产业/新闻类
+  - name: "小红书 - 游戏行业动态"
+    url: "https://rsshub.app/xiaohongshu/keyword/游戏行业动态"
+  - name: "小红书 - 游戏开发"
+    url: "https://rsshub.app/xiaohongshu/keyword/游戏开发"
+  - name: "小红书 - 游戏公司"
+    url: "https://rsshub.app/xiaohongshu/keyword/游戏公司"
+  - name: "小红书 - 手游资讯"
+    url: "https://rsshub.app/xiaohongshu/keyword/手游资讯"
+  - name: "小红书 - 端游新闻"
+    url: "https://rsshub.app/xiaohongshu/keyword/端游新闻"
+  - name: "小红书 - 主机游戏"
+    url: "https://rsshub.app/xiaohongshu/keyword/主机游戏"
+  - name: "小红书 - 电竞"
+    url: "https://rsshub.app/xiaohongshu/keyword/电竞"
+  - name: "小红书 - 游戏发行"
+    url: "https://rsshub.app/xiaohongshu/keyword/游戏发行"
 
 # 工作流配置
 workflow:
