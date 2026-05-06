@@ -153,6 +153,17 @@ rss_feeds:
   - name: "Reddit r/GameDesign"
     url: "https://www.reddit.com/r/GameDesign/.rss"
 
+  # ========== 社交媒体 RSS（微博: 游戏厂商） ==========
+  # 自建 Weibo RSS Bridge 部署于 Vercel
+  - name: "微博 - 腾讯游戏"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/3604205173"
+  - name: "微博 - 网易游戏"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1502592662"
+  - name: "微博 - 米哈游miHoYo"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/6415164493"
+  - name: "微博 - 莉莉丝游戏"
+    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/5632612496"
+
   # ========== 社交媒体 RSS（Nitter: X/Twitter） ==========
   # Nitter: 开源 Twitter 前端，生成 RSS
   - name: "X - GameSpot"
