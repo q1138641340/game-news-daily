@@ -159,6 +159,11 @@ class DedupCache:
         netloc = parsed.netloc
         if netloc.startswith('www.'):
             netloc = netloc[4:]
+        # 统一 twitter.com 和 x.com（两者指向同一平台）
+        if netloc in ('twitter.com', 'x.com'):
+            netloc = 'twitter.com'
+        # 处理 xhslink.com 等短链接（保留原样，不做归一化，避免误匹配）
+        # 小红书短链接需要完整 fetch 才能拿到真实 URL，超出缓存层职责
         # 移除追踪参数
         if parsed.query:
             qs_pairs = parsed.query.split('&')
