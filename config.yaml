@@ -163,7 +163,7 @@ rss_feeds:
     url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/6415164493"
   - name: "微博 - 莉莉丝游戏"
     url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/5632612496"
-  - name: "微博 - 叠纸游戏"
+  - name: "微博 - 新浪游戏"
     url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/517656716"
 
   # ========== 社交媒体 RSS（Nitter: X/Twitter） ==========

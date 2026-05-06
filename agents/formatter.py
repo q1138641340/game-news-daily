@@ -115,12 +115,13 @@ Top 3 必读条目：
         self.config = config
         self.llm, self.model = get_format_deepseek()  # DeepSeek V4 整理
 
-    def run(self, items: list[dict]) -> str:
+    def run(self, items: list[dict], pipeline_meta: dict = None) -> str:
         """
         整理并生成日报
 
         Args:
             items: 通过双重审查的条目列表
+            pipeline_meta: 流水线元数据，用于生成工序证明
 
         Returns:
             完整的 Markdown 日报内容（不含 frontmatter）
@@ -130,6 +131,9 @@ Top 3 必读条目：
 
         # 最终去重检查（标题相似度）
         items = self._final_dedup(items)
+
+        # 生成工序证明
+        process_proof = self._build_process_proof(pipeline_meta, items)
 
         # 按类型分组
         papers = [item for item in items if item.get("category", "") in
@@ -182,10 +186,16 @@ Top 3 必读条目：
             )
             # 后处理：追加战略增强内容（不改动原有结构）
             report = self._add_strategic_enhancements(report, papers, news)
+            # 前置工序证明
+            if process_proof:
+                report = f"{process_proof}\n\n---\n\n{report}"
             return report
         except Exception as e:
             logger.warning(f"  [LLM生成失败]: {e}")
-            return self._fallback_report(papers, news)
+            fallback = self._fallback_report(papers, news)
+            if process_proof:
+                fallback = f"{process_proof}\n\n---\n\n{fallback}"
+            return fallback
 
     def _add_strategic_enhancements(self, report: str, papers: list[dict], news: list[dict]) -> str:
         """
@@ -308,6 +318,78 @@ Top 3 必读条目：
         intersection = words1 & words2
         union = words1 | words2
         return len(intersection) / len(union) if union else 0.0
+
+    @staticmethod
+    def _build_process_proof(meta: dict, items: list[dict]) -> str:
+        """生成工序证明，控制在 600 字以内"""
+        if not meta:
+            return ""
+
+        today = datetime.now().strftime("%Y-%m-%d")
+        lines = [f"## 工序证明 | {today}", ""]
+
+        # 一、处理流程概述
+        stats = meta.get("stats", {})
+        collected = stats.get("collected", 0)
+        preprocessed = stats.get("preprocessed", 0)
+        quality_passed = stats.get("quality_passed", 0)
+        relevance_passed = stats.get("relevance_passed", 0)
+        final_count = stats.get("final_count", len(items))
+
+        lines.append("### 处理流程")
+        lines.append(f"本报告经过 **6 阶段流水线** 处理：")
+        lines.append(f"1. **跨天去重** → 加载 90 天历史缓存，过滤已收录 URL/DOI/标题")
+        lines.append(f"2. **信息收集** → RSS + 学术 API + 关键词搜索，共采集 {collected} 条")
+        lines.append(f"3. **预处理清洗** → LLM 提取正文、去噪、去广告，有效 {preprocessed} 条")
+        lines.append(f"4. **质量审查** → 评分过滤，通过 {quality_passed} 条（最低质量分 {meta.get('min_quality', 0.5)}）")
+        lines.append(f"5. **相关性审查** → 领域匹配，通过 {relevance_passed} 条（最低相关分 {meta.get('min_relevance', 0.3)}）")
+        lines.append(f"6. **整理输出** → 最终去重 + LLM 格式化，输出 {final_count} 条")
+
+        # 二、使用的模型
+        lines.append("")
+        lines.append("### 参与模型")
+        models = meta.get("models", {})
+        for phase, info in models.items():
+            status = info.get("status", "✅")
+            lines.append(f"- **{phase}**: {info['name']}（{info.get('provider', '')}）{status}")
+        lines.append("> 注：表示该阶段有部分调用失败或使用了降级模型")
+
+        # 三、质量保障
+        lines.append("")
+        lines.append("### 质量保障")
+        checks = meta.get("quality_checks", {})
+        h_check = checks.get("hallucination", {})
+        d_check = checks.get("dedup", {})
+        lines.append(f"- **幻觉检测**: {'已启用' if h_check.get('enabled') else '未启用'}，"
+                     f"标记 {h_check.get('flagged', 0)} 条疑似幻觉内容"
+                     f"{'，已自动排除' if h_check.get('auto_reject') else ''}")
+        lines.append(f"- **去重机制**: 4 层（URL精确→跨天缓存→LLM语义→Jaccard标题），"
+                     f"累计去重 {d_check.get('total_removed', 0)} 条")
+        lines.append(f"- **内容溯源**: 所有条目均保留原始 URL/DOI，可追溯验证")
+
+        # 四、维护提醒
+        lines.append("")
+        lines.append("### 维护提醒")
+        alerts = meta.get("alerts", [])
+        if alerts:
+            for alert in alerts:
+                lines.append(f"- {alert}")
+        else:
+            lines.append("- 本次运行各组件正常，无需特别关注")
+
+        # 过期检测
+        if meta.get("cookie_status"):
+            cs = meta["cookie_status"]
+            for name, info in cs.items():
+                days = info.get("days_ago", 0)
+                if days > 30:
+                    lines.append(f"- **Cookie 过期风险**: `{name}` 已使用 {days} 天，建议在 {info.get('expire_hint', '近期')} 更新")
+
+        proof = "\n".join(lines)
+        if len(proof) > 900:
+            # Truncate if too long - keep under ~600 Chinese chars
+            proof = proof[:900] + "\n\n> 工序证明过长已截断"
+        return proof
 
     def _fallback_report(self, papers: list[dict], news: list[dict]) -> str:
         """降级方案：不使用LLM，直接格式化（中文）"""

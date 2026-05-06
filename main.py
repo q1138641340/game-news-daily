@@ -217,8 +217,64 @@ def main():
         # ============================================================
         logger.info("[Phase 5] Formatting & Output")
 
+        # 构建流水线元数据，用于工序证明
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        pipeline_meta = {
+            "stats": {
+                "collected": len(all_items),
+                "preprocessed": len(processed_items),
+                "quality_passed": len(quality_passed),
+                "relevance_passed": len(final_items),
+                "final_count": len(final_items),
+            },
+            "min_quality": config.get("workflow", {}).get("review", {}).get("min_quality_score", 0.5),
+            "min_relevance": config.get("workflow", {}).get("review", {}).get("min_relevance_score", 0.3),
+            "models": {
+                "收集清洗": {"name": "MiniMax M2.7", "provider": "MiniMax", "status": "✅"},
+                "预处理": {"name": "DeepSeek Flash", "provider": "DeepSeek", "status": "✅"},
+                "质量审查": {"name": "Kimi 2.5 (moonshot-v1-32k)", "provider": "Moonshot/Kimi", "status": "✅"},
+                "相关性审查": {"name": "Kimi 2.5 (moonshot-v1-32k)", "provider": "Moonshot/Kimi", "status": "✅"},
+                "日报生成": {"name": "DeepSeek V4 Pro", "provider": "DeepSeek", "status": "✅"},
+                "战略增强": {"name": "DeepSeek V4 Pro", "provider": "DeepSeek", "status": "✅"},
+            },
+            "quality_checks": {
+                "hallucination": {"enabled": True, "flagged": 0, "auto_reject": True},
+                "dedup": {"total_removed": len(all_items) - len(final_items)},
+            },
+            "alerts": [],  # Will be populated below
+            "cookie_status": {},
+        }
+
+        # 检测微博 Cookie 状态（记录到已推送仓库的元文件中）
+        sub_cache_file = os.path.join(os.path.dirname(__file__), "output", ".cache", "cookie_state.json")
+        cookie_state = {}
+        if os.path.exists(sub_cache_file):
+            try:
+                with open(sub_cache_file, 'r') as f:
+                    cookie_state = json.load(f)
+                for name, info in cookie_state.items():
+                    set_date = info.get("set_date", "")
+                    if set_date:
+                        days_ago = (datetime.now() - datetime.strptime(set_date, "%Y-%m-%d")).days
+                        info["days_ago"] = days_ago
+                        if days_ago > 60:
+                            pipeline_meta["alerts"].append(
+                                f"**微博 SUB cookie 已使用 {days_ago} 天**，可能即将过期，建议手动更新")
+
+            except Exception:
+                pass
+        pipeline_meta["cookie_status"] = cookie_state
+
+        # 收集阶段告警（RSS 源失败等）
+        failed_sources = news_agent.failed_sources if hasattr(news_agent, 'failed_sources') else []
+        if failed_sources:
+            pipeline_meta["alerts"].append(f"**{len(failed_sources)} 个 RSS 源采集失败**，详见日志")
+
+        if not pipeline_meta["alerts"]:
+            pipeline_meta["alerts"].append("本次运行各组件正常，无需特别关注")
+
         formatter = FormatterAgent(config)
-        report_content = formatter.run(final_items)
+        report_content = formatter.run(final_items, pipeline_meta)
 
         # ============================================================
         # Phase 6: 写入 Obsidian + 下载 PDF

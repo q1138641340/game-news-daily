@@ -32,3 +32,4 @@ output/**/Papers/*.pdf
 
 # 本地配置覆盖
 config.local.yaml
+.vercel
