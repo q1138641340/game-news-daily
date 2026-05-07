@@ -66,7 +66,6 @@ jobs:
           DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
           OBSIDIAN_VAULT_PATH: /tmp/vault
         run: |
-          cd /Users/sunjinghe/daily-news-workflow
           python generate_weekly_paper.py --days ${{ github.event.inputs.days || '7' }}
 
       - name: Upload artifacts

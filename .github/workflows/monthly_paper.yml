@@ -63,7 +63,6 @@ jobs:
           DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
           OBSIDIAN_VAULT_PATH: /tmp/vault
         run: |
-          cd /Users/sunjinghe/daily-news-workflow
           python generate_monthly_paper.py
 
       - name: Skip if not last day
