@@ -5,8 +5,8 @@ REM 1. git pull   拉取 Mac/GitHub Actions 最新变更
 REM 2. Python采集 运行全量工作流（含 OpenCLI 源）
 REM 3. git push   推送日报结果回 GitHub
 REM
-REM 用于 Windows Task Scheduler 每天 04:30 执行
-REM GH Actions 02:30 开始，最坏情况 04:00 完成，04:30 安全窗口
+REM 用于 Windows Task Scheduler 每天 06:00 执行
+REM GH Actions 02:30 开始，实测 04:00-04:09 完成，06:00 充裕安全窗口
 REM ============================================
 
 echo ========================================
