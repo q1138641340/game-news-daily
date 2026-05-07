@@ -6,7 +6,7 @@
 import logging
 from datetime import datetime
 from typing import Optional
-from tools.llm import get_format_deepseek, get_kimi_reviewer
+from tools.llm import get_format_deepseek, get_kimi_reviewer, get_collect_minimax
 from tools.citation_tracker import CitationTracker
 
 logger = logging.getLogger(__name__)
@@ -158,8 +158,9 @@ class PaperGeneratorAgent:
 
     def __init__(self, config: dict = None):
         self.config = config or {}
-        self.llm, self.model = get_format_deepseek()       # 写作模型
-        self.reviewer_llm, self.reviewer_model = get_kimi_reviewer()  # 审稿模型
+        self.llm, self.model = get_format_deepseek()              # 写作模型
+        self.initial_llm, self.initial_model = get_collect_minimax()  # 初审 (MiniMax)
+        self.reviewer_llm, self.reviewer_model = get_kimi_reviewer()  # 复审 (Kimi)
         self.citation_tracker = CitationTracker()
 
     def generate_weekly(self, daily_reports: list[dict]) -> str:
@@ -222,13 +223,21 @@ class PaperGeneratorAgent:
                 bib = self.citation_tracker.format_bibliography(all_refs)
                 paper += bib
 
-            # Kimi 2.5 审稿 + DeepSeek 修订
-            review = self._review_paper(paper, "周论文", str(papers_data)[:2000])
-            if not review["passed"]:
-                logger.info(f"  [周论文] 审稿发现 {review['issues']} 个问题，开始修订...")
-                paper = self._revise_paper(paper, review)
+            # ---- 层1: MiniMax 初审 ----
+            init_review = self._initial_review_paper(paper, "周论文")
+            if not init_review["passed"]:
+                logger.info(f"  [周论文] MiniMax初审发现 {init_review['issues']} 个问题，第1次修订...")
+                paper = self._revise_paper(paper, init_review)
 
-            logger.info(f"  [周论文生成] 完成，字数约 {len(paper)} 字")
+            # ---- 层2: Kimi 复审 ----
+            kim_review = self._review_paper(paper, "周论文", str(papers_data)[:2000])
+            if not kim_review["passed"]:
+                logger.info(f"  [周论文] Kimi复审发现 {kim_review['issues']} 个问题，第2次修订...")
+                paper = self._revise_paper(paper, kim_review)
+
+            logger.info(f"  [周论文生成] 完成，字数约 {len(paper)} 字 "
+                       f"(MiniMax初审: {'✅' if init_review['passed'] else '❌'} "
+                       f"Kimi复审: {'✅' if kim_review['passed'] else '❌'})")
             return paper
 
         except Exception as e:
@@ -286,13 +295,21 @@ class PaperGeneratorAgent:
                 bib = self.citation_tracker.format_bibliography(all_refs)
                 paper += bib
 
-            # Kimi 2.5 审稿 + DeepSeek 修订
-            review = self._review_paper(paper, "月论文", str(weekly_papers)[:2000])
-            if not review["passed"]:
-                logger.info(f"  [月论文] 审稿发现 {review['issues']} 个问题，开始修订...")
-                paper = self._revise_paper(paper, review)
+            # ---- 层1: MiniMax 初审 ----
+            init_review = self._initial_review_paper(paper, "月论文")
+            if not init_review["passed"]:
+                logger.info(f"  [月论文] MiniMax初审发现 {init_review['issues']} 个问题，第1次修订...")
+                paper = self._revise_paper(paper, init_review)
 
-            logger.info(f"  [月论文生成] 完成，字数约 {len(paper)} 字")
+            # ---- 层2: Kimi 复审 ----
+            kim_review = self._review_paper(paper, "月论文", str(weekly_papers)[:2000])
+            if not kim_review["passed"]:
+                logger.info(f"  [月论文] Kimi复审发现 {kim_review['issues']} 个问题，第2次修订...")
+                paper = self._revise_paper(paper, kim_review)
+
+            logger.info(f"  [月论文生成] 完成，字数约 {len(paper)} 字 "
+                       f"(MiniMax初审: {'✅' if init_review['passed'] else '❌'} "
+                       f"Kimi复审: {'✅' if kim_review['passed'] else '❌'})")
             return paper
 
         except Exception as e:
@@ -476,6 +493,43 @@ class PaperGeneratorAgent:
 
 ## 输出
 完整的修订后 Markdown 论文。"""
+
+    INITIAL_REVIEW_PROMPT = """你是学术编辑，负责论文初审。快速筛查以下问题：
+
+1. 结构完整性：论文是否有明显的章节缺失？
+2. 引用可靠性：引用的论文/作者/期刊是否看起来真实可信？
+3. 逻辑连贯性：论证是否有明显的跳跃或矛盾？
+4. 语言质量：是否有明显的机翻痕迹或非学术表达？
+5. AI痕迹：是否有明显的"首先...其次...最后"套路化模板痕迹？
+
+只列出你发现的具体问题，每条一行。如果没有问题，输出"初审通过"。"""
+
+    def _initial_review_paper(self, paper: str, paper_type: str) -> dict:
+        """MiniMax 初审：快速筛查明显问题"""
+        user_msg = f"请初审以下{paper_type}：\n\n{paper[:8000]}"
+        try:
+            feedback = self.initial_llm.chat(
+                system_prompt=self.INITIAL_REVIEW_PROMPT,
+                user_message=user_msg,
+                model=self.initial_model,
+                temperature=0.2,
+                max_tokens=1500
+            )
+            # 判断是否通过
+            passed = "初审通过" in feedback
+            issues = len([l for l in feedback.split('\n') if l.strip() and not l.startswith('#')]) if not passed else 0
+
+            logger.info(f"  [MiniMax初审] {paper_type}: {'✅ 通过' if passed else f'发现 {issues} 个问题'}")
+
+            return {
+                "passed": passed,
+                "issues": issues,
+                "feedback": feedback,
+                "reviewer": "MiniMax",
+            }
+        except Exception as e:
+            logger.warning(f"  [MiniMax初审失败] {e}")
+            return {"passed": True, "issues": 0, "feedback": "", "reviewer": "MiniMax"}
 
     def _review_paper(self, paper: str, paper_type: str, source_data: str = "") -> dict:
         """
