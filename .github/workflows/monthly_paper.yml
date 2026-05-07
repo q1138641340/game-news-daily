@@ -1,0 +1,120 @@
+name: Monthly Paper Generator
+
+on:
+  # 每月最后一天 20:00 UTC = 北京时间次日凌晨 4:00
+  # 注意：这个 cron 会在 28-31 号每天 20:00 运行
+  # 脚本内部会检查是否是真正的最后一天
+  schedule:
+    - cron: '0 20 28-31 * *'
+  # 允许手动触发
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+  TARGET_REPO: 'q1138641340/github-obsidian-vault'
+  TARGET_BRANCH: 'main'
+
+jobs:
+  generate-monthly-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Clone vault repository
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git clone --depth 1 https://x-access-token:$GH_PAT@github.com/${{ env.TARGET_REPO }}.git /tmp/vault
+
+      - name: Check if last day of month
+        id: check_date
+        run: |
+          python3 << 'EOF'
+          from datetime import datetime
+          now = datetime.utcnow()
+          # 检查是否是月末
+          is_last_day = now.day >= 28
+          next_day = datetime(now.year, now.month, now.day) + __import__('datetime').timedelta(days=1)
+          is_last = next_day.month != now.month
+          print(f"::set-output name=is_last_day::{is_last}")
+          print(f"Day: {now.day}, Next month: {next_day.month}")
+          EOF
+
+      - name: Generate monthly paper (if last day)
+        if: steps.check_date.outputs.is_last_day == 'true'
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
+          OBSIDIAN_VAULT_PATH: /tmp/vault
+        run: |
+          cd /Users/sunjinghe/daily-news-workflow
+          python generate_monthly_paper.py
+
+      - name: Skip if not last day
+        if: steps.check_date.outputs.is_last_day != 'true'
+        run: |
+          echo "Not the last day of month, skipping monthly paper generation"
+
+      - name: Upload artifacts
+        if: always() && steps.check_date.outputs.is_last_day == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-paper-${{ github.run_id }}
+          path: output/monthly_papers/
+          retention-days: 30
+
+      - name: Push to Obsidian Vault Repository
+        if: success() && steps.check_date.outputs.is_last_day == 'true'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          # 创建 Monthly Papers 目录（如果不存在）
+          mkdir -p "/tmp/vault/Research Feed/Monthly Papers"
+
+          # 复制月论文
+          if [ -d "output/monthly_papers" ]; then
+            cp output/monthly_papers/*.md "/tmp/vault/Research Feed/Monthly Papers/"
+          fi
+
+          cd /tmp/vault
+
+          # 配置 git
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          # 添加变更
+          git add "Research Feed/Monthly Papers/"
+
+          # 检查是否有变更
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          # 提交并推送
+          COMMIT_MSG="📄 Monthly Paper $(date +%Y-%m) [run ${{ github.run_id }}]"
+          git commit -m "$COMMIT_MSG"
+          git push origin ${{ env.TARGET_BRANCH }}
+
+          echo "Successfully pushed monthly paper to ${{ env.TARGET_REPO }}/Research Feed/Monthly Papers"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Monthly paper generation failed. Check logs for details."

@@ -1,0 +1,118 @@
+name: Weekly Paper Generator
+
+on:
+  # 每周日 12:00 UTC = 北京时间 20:00
+  schedule:
+    - cron: '0 12 * * 0'
+  # 允许手动触发
+  workflow_dispatch:
+    inputs:
+      days:
+        description: '收集的天数'
+        required: false
+        default: '7'
+
+env:
+  PYTHON_VERSION: '3.11'
+  TARGET_REPO: 'q1138641340/github-obsidian-vault'
+  TARGET_BRANCH: 'main'
+
+jobs:
+  generate-weekly-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Load cross-day dedup cache from vault
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          mkdir -p output/.cache
+          HTTP_CODE=$(curl -s -o output/.cache/seen_items.json \
+            -w "%{http_code}" \
+            -H "Authorization: token $GH_PAT" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/${{ env.TARGET_REPO }}/contents/Research%20Feed/.cache/seen_items.json?ref=${{ env.TARGET_BRANCH }}" \
+            2>/dev/null || echo "000")
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Loaded dedup cache from vault"
+          fi
+
+      - name: Clone vault repository
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git clone --depth 1 https://x-access-token:$GH_PAT@github.com/${{ env.TARGET_REPO }}.git /tmp/vault
+
+      - name: Generate weekly paper
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
+          OBSIDIAN_VAULT_PATH: /tmp/vault
+        run: |
+          cd /Users/sunjinghe/daily-news-workflow
+          python generate_weekly_paper.py --days ${{ github.event.inputs.days || '7' }}
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-paper-${{ github.run_id }}
+          path: output/weekly_papers/
+          retention-days: 30
+
+      - name: Push to Obsidian Vault Repository
+        if: success()
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          # 创建 Weekly Papers 目录（如果不存在）
+          mkdir -p "/tmp/vault/Research Feed/Weekly Papers"
+
+          # 复制周论文
+          if [ -d "output/weekly_papers" ]; then
+            cp output/weekly_papers/*.md "/tmp/vault/Research Feed/Weekly Papers/"
+          fi
+
+          cd /tmp/vault
+
+          # 配置 git
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          # 添加变更
+          git add "Research Feed/Weekly Papers/"
+
+          # 检查是否有变更
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          # 提交并推送
+          COMMIT_MSG="📄 Weekly Paper $(date +%Y-W%U) [run ${{ github.run_id }}]"
+          git commit -m "$COMMIT_MSG"
+          git push origin ${{ env.TARGET_BRANCH }}
+
+          echo "Successfully pushed weekly paper to ${{ env.TARGET_REPO }}/Research Feed/Weekly Papers"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Weekly paper generation failed. Check logs for details."
