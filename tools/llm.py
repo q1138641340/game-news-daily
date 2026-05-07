@@ -173,6 +173,12 @@ def get_kimi_client() -> LLMClient:
     return LLMClient(provider="kimi")
 
 
+def get_kimi_reviewer() -> tuple[LLMClient, str]:
+    """获取 Kimi 审查模型"""
+    client = LLMClient(provider="kimi")
+    return client, "moonshot-v1-32k"
+
+
 def get_deepseek_client() -> LLMClient:
     """获取 DeepSeek 客户端（默认 DeepSeek V4）"""
     return LLMClient(provider="deepseek")

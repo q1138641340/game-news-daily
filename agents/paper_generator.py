@@ -6,7 +6,7 @@
 import logging
 from datetime import datetime
 from typing import Optional
-from tools.llm import get_format_deepseek
+from tools.llm import get_format_deepseek, get_kimi_reviewer
 from tools.citation_tracker import CitationTracker
 
 logger = logging.getLogger(__name__)
@@ -158,7 +158,8 @@ class PaperGeneratorAgent:
 
     def __init__(self, config: dict = None):
         self.config = config or {}
-        self.llm, self.model = get_format_deepseek()
+        self.llm, self.model = get_format_deepseek()       # 写作模型
+        self.reviewer_llm, self.reviewer_model = get_kimi_reviewer()  # 审稿模型
         self.citation_tracker = CitationTracker()
 
     def generate_weekly(self, daily_reports: list[dict]) -> str:
@@ -221,6 +222,12 @@ class PaperGeneratorAgent:
                 bib = self.citation_tracker.format_bibliography(all_refs)
                 paper += bib
 
+            # Kimi 2.5 审稿 + DeepSeek 修订
+            review = self._review_paper(paper, "周论文", str(papers_data)[:2000])
+            if not review["passed"]:
+                logger.info(f"  [周论文] 审稿发现 {review['issues']} 个问题，开始修订...")
+                paper = self._revise_paper(paper, review)
+
             logger.info(f"  [周论文生成] 完成，字数约 {len(paper)} 字")
             return paper
 
@@ -278,6 +285,12 @@ class PaperGeneratorAgent:
             if all_refs:
                 bib = self.citation_tracker.format_bibliography(all_refs)
                 paper += bib
+
+            # Kimi 2.5 审稿 + DeepSeek 修订
+            review = self._review_paper(paper, "月论文", str(weekly_papers)[:2000])
+            if not review["passed"]:
+                logger.info(f"  [月论文] 审稿发现 {review['issues']} 个问题，开始修订...")
+                paper = self._revise_paper(paper, review)
 
             logger.info(f"  [月论文生成] 完成，字数约 {len(paper)} 字")
             return paper
@@ -395,6 +408,144 @@ class PaperGeneratorAgent:
 请生成完整 Markdown 月度大论文：
 """
         return prompt
+
+    REVIEWER_SYSTEM_PROMPT = """你是 CSSCI 期刊资深匿名审稿人。你的任务是严格审查一篇学术论文，找出所有问题。
+
+## 审查维度（每项打分：严重/中等/轻微/无）
+
+### 1. 事实准确性
+- 引用的论文标题、作者、期刊是否准确？
+- 是否有明显的事实错误或时间错误？
+- 是否杜撰了不存在的引用？
+
+### 2. 逻辑严密性
+- 论点是否有充分的证据支持？
+- 论证链条是否有断裂或跳跃？
+- 结论是否从分析中自然得出？
+
+### 3. 学术规范
+- 结构是否符合 CSSCI 期刊标准？
+- 引用格式是否规范？
+- 摘要是否涵盖背景+方法+发现+意义？
+
+### 4. 语言与表达
+- 是否有口语化或非学术表达？
+- 是否有机翻痕迹或不自然的表述？
+- 专业术语使用是否准确？
+
+### 5. 创新性与价值
+- 是否提出了有价值的见解？
+- 是否有明显的AI生成痕迹（空洞、套路化）？
+
+## 输出格式
+
+```
+## 审稿意见
+
+### 总体评价
+[一段话概括论文质量]
+
+### 严重问题
+1. ...
+2. ...
+
+### 中等问题
+1. ...
+2. ...
+
+### 轻微问题
+1. ...
+2. ...
+
+### 修订建议
+1. [具体的修改方向]
+2. ...
+```
+
+只输出审稿意见，不要其他内容。"""
+
+    REVISION_SYSTEM_PROMPT = """你是人文社科领域资深学者。根据审稿人的反馈，修订你的论文。
+
+## 修订要求
+1. 逐条回应审稿人的每个问题
+2. 严重问题必须彻底修改
+3. 中等问题需要明显改进
+4. 轻微问题酌情处理
+5. 保持论文的整体结构和学术风格
+6. 修订后的论文应比原稿有明显提升
+
+## 输出
+完整的修订后 Markdown 论文。"""
+
+    def _review_paper(self, paper: str, paper_type: str, source_data: str = "") -> dict:
+        """
+        Kimi 2.5 审稿
+
+        Returns:
+            dict with keys: passed (bool), issues (int), feedback (str)
+        """
+        user_msg = f"""请审查以下{paper_type}。
+
+**论文类型**: {paper_type}
+**原始数据摘要**: {source_data[:1000] if source_data else "（未提供）"}
+
+---
+{paper[:12000]}
+---"""
+        try:
+            feedback = self.reviewer_llm.chat(
+                system_prompt=self.REVIEWER_SYSTEM_PROMPT,
+                user_message=user_msg,
+                model=self.reviewer_model,
+                temperature=0.3,
+                max_tokens=4000
+            )
+            # 统计问题数
+            import re
+            severe = len(re.findall(r'### 严重问题.*?\n', feedback))
+            medium = len(re.findall(r'### 中等问题.*?\n', feedback))
+            minor = len(re.findall(r'### 轻微问题.*?\n', feedback))
+            total_issues = severe + medium + minor
+
+            logger.info(f"  [审稿] {paper_type}: 严重{severe}个, 中等{medium}个, 轻微{minor}个")
+
+            return {
+                "passed": severe == 0,
+                "issues": total_issues,
+                "feedback": feedback,
+                "severe": severe,
+                "medium": medium,
+                "minor": minor,
+            }
+        except Exception as e:
+            logger.warning(f"  [审稿失败] {e}")
+            return {"passed": True, "issues": 0, "feedback": "", "severe": 0, "medium": 0, "minor": 0}
+
+    def _revise_paper(self, paper: str, review: dict) -> str:
+        """根据审稿反馈修订论文"""
+        if not review.get("feedback") or review.get("passed"):
+            return paper
+
+        user_msg = f"""## 审稿人反馈
+{review['feedback']}
+
+## 原稿
+{paper[:10000]}
+
+请根据审稿人反馈输出修订后的完整论文。"""
+        try:
+            revised = self.llm.chat(
+                system_prompt=self.REVISION_SYSTEM_PROMPT,
+                user_message=user_msg,
+                model=self.model,
+                temperature=0.3,
+                max_tokens=32000
+            )
+            logger.info(f"  [修订] 完成")
+            return revised
+        except Exception as e:
+            logger.warning(f"  [修订失败] {e}")
+            return paper
 
     def _empty_paper(self, paper_type: str) -> str:
         """生成空论文"""
