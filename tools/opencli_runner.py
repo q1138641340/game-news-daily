@@ -1,23 +1,66 @@
 """
 OpenCLI Runner — 统一封装 OpenCLI 子进程调用
-支持万方、百度学术、CNKI、小红书等数据源
+支持万方、百度学术、小红书等数据源。Mac/Win 双平台兼容。
 """
 
 import subprocess
 import json
 import logging
+import shutil
+import platform
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+IS_WINDOWS = platform.system() == "Windows"
 
 
 class OpenCLIRunner:
     """OpenCLI 命令封装，通过 subprocess 调用 opencli"""
 
-    def __init__(self, opencli_path: str = "opencli", timeout: int = 90):
-        self.path = opencli_path
+    def __init__(self, opencli_path: str = None, timeout: int = 90):
+        self.path = opencli_path or self._find_opencli()
         self.timeout = timeout
         self._available: Optional[bool] = None
+        self._daemon_restarted = False
+
+    @staticmethod
+    def _find_opencli() -> str:
+        """动态检测 opencli 路径"""
+        # 优先用 shutil.which，Windows 上用 where
+        found = shutil.which("opencli")
+        if found:
+            return found
+        return "opencli"  # fallback
+
+    def _run_cmd(self, args: list[str]) -> subprocess.CompletedProcess:
+        """跨平台 subprocess 调用"""
+        kwargs = {
+            "capture_output": True,
+            "text": True,
+            "timeout": self.timeout,
+            "encoding": "utf-8",
+        }
+        if IS_WINDOWS:
+            kwargs["shell"] = True
+            # Windows 需要用字符串拼接命令
+            cmd = " ".join(f'"{a}"' if " " in a else a for a in args)
+            return subprocess.run(cmd, **kwargs)
+        else:
+            return subprocess.run([self.path] + args, **kwargs)
+
+    def _restart_daemon(self) -> bool:
+        """尝试重启 OpenCLI daemon"""
+        if self._daemon_restarted:
+            return False
+        self._daemon_restarted = True
+        try:
+            self._run_cmd(["opencli", "daemon", "restart"])
+            logger.info("  [OpenCLI] daemon 已重启")
+            return True
+        except Exception as e:
+            logger.warning(f"  [OpenCLI] daemon 重启失败: {e}")
+            return False
 
     def is_available(self) -> bool:
         """检查 OpenCLI 是否可用（daemon + 扩展）"""
@@ -25,17 +68,25 @@ class OpenCLIRunner:
             return self._available
 
         try:
-            result = subprocess.run(
-                [self.path, "doctor"],
-                capture_output=True, text=True, timeout=10
-            )
-            # 检查扩展是否连接
+            result = self._run_cmd([self.path, "doctor"])
             if "Extension: connected" in result.stdout and result.returncode == 0:
                 self._available = True
                 logger.info("  [OpenCLI] 可用 (扩展已连接)")
             else:
-                self._available = False
-                logger.warning("  [OpenCLI] 扩展未连接或不可用")
+                # 尝试重启 daemon
+                if self._restart_daemon():
+                    import time
+                    time.sleep(3)
+                    result2 = self._run_cmd([self.path, "doctor"])
+                    if "Extension: connected" in result2.stdout:
+                        self._available = True
+                        logger.info("  [OpenCLI] daemon 重启后可用")
+                    else:
+                        self._available = False
+                        logger.warning("  [OpenCLI] 扩展未连接或不可用")
+                else:
+                    self._available = False
+                    logger.warning("  [OpenCLI] 扩展未连接或不可用")
         except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
             self._available = False
             logger.warning(f"  [OpenCLI] 不可用: {e}")
@@ -50,38 +101,9 @@ class OpenCLIRunner:
         """百度学术搜索（公开访问）"""
         return self._search("baidu-scholar", query, max_results, source="百度学术")
 
-    def search_cnki(self, query: str, max_results: int = 5) -> list[dict]:
-        """CNKI 知网搜索（需登录）"""
-        return self._search("cnki", query, max_results, source="知网")
-
     def search_xiaohongshu(self, query: str, max_results: int = 5) -> list[dict]:
         """小红书关键词搜索（需登录）"""
         return self._search("xiaohongshu", query, max_results, source="小红书")
-
-    def get_xiaohongshu_note(self, url: str) -> Optional[dict]:
-        """获取小红书笔记详情（补充正文）"""
-        if not self.is_available():
-            return None
-
-        try:
-            result = subprocess.run(
-                [self.path, "xiaohongshu", "note", url, "-f", "json"],
-                capture_output=True, text=True, timeout=self.timeout
-            )
-            if result.returncode != 0:
-                return None
-            data = json.loads(result.stdout)
-            if isinstance(data, dict) and data:
-                return {
-                    "title": data.get("title", ""),
-                    "content": data.get("content", "") or data.get("desc", ""),
-                    "likes": data.get("likes", "") or data.get("like_count", ""),
-                    "comments": data.get("comments", "") or data.get("comment_count", ""),
-                    "author": data.get("author", "") or data.get("user", {}).get("nickname", ""),
-                }
-        except (json.JSONDecodeError, subprocess.TimeoutExpired, OSError) as e:
-            logger.warning(f"  [小红书笔记] 获取失败: {e}")
-        return None
 
     # ---- 内部方法 ----
 
@@ -91,11 +113,10 @@ class OpenCLIRunner:
             return []
 
         try:
-            result = subprocess.run(
-                [self.path, adapter, "search", query,
-                 "--limit", str(max_results), "-f", "json"],
-                capture_output=True, text=True, timeout=self.timeout
-            )
+            result = self._run_cmd([
+                self.path, adapter, "search", query,
+                "--limit", str(max_results), "-f", "json"
+            ])
             if result.returncode != 0:
                 logger.warning(f"  [{source}] 命令失败: {result.stderr[:100]}")
                 return []
