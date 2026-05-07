@@ -98,10 +98,34 @@ class AcademicCollectorAgent:
         # 步骤5: PubScholar（中文公益学术平台）
         pubscholar_kw = academic_kw.get("pubscholar", [])
         if pubscholar_kw:
-            logger.info("  [5/5] PubScholar（中文公益学术）...")
+            logger.info("  [5/8] PubScholar（中文公益学术）...")
             pubscholar_papers = self._collect_pubscholar(pubscholar_kw)
             all_papers.extend(pubscholar_papers)
             logger.info(f"        PubScholar 获取 {len(pubscholar_papers)} 篇")
+
+        # 步骤6: 万方（OpenCLI，公开访问）
+        wanfang_kw = academic_kw.get("wanfang", [])
+        if wanfang_kw:
+            logger.info("  [6/8] 万方（OpenCLI）...")
+            wanfang_papers = self._collect_wanfang_via_opencli(wanfang_kw, config)
+            all_papers.extend(wanfang_papers)
+            logger.info(f"        万方 获取 {len(wanfang_papers)} 篇")
+
+        # 步骤7: 百度学术（OpenCLI，公开访问）
+        baidu_kw = academic_kw.get("baidu_scholar", [])
+        if baidu_kw:
+            logger.info("  [7/8] 百度学术（OpenCLI）...")
+            baidu_papers = self._collect_baidu_scholar_via_opencli(baidu_kw, config)
+            all_papers.extend(baidu_papers)
+            logger.info(f"        百度学术 获取 {len(baidu_papers)} 篇")
+
+        # 步骤8: CNKI 知网（OpenCLI，需登录，当前因验证码不可用）
+        cnki_kw = academic_kw.get("cnki", [])
+        if cnki_kw:
+            logger.info("  [8/8] CNKI 知网（OpenCLI）...")
+            cnki_papers = self._collect_cnki_via_opencli(cnki_kw, config)
+            all_papers.extend(cnki_papers)
+            logger.info(f"        CNKI 获取 {len(cnki_papers)} 篇")
 
         # LLM 清洗和评估
         if all_papers:
@@ -582,5 +606,111 @@ class AcademicCollectorAgent:
 
         except Exception as e:
             logger.warning(f"        [arXiv XML解析失败]: {e}")
+
+    @staticmethod
+    def _collect_wanfang_via_opencli(queries: list[str], config: dict) -> list[dict]:
+        """从万方收集中文论文（OpenCLI，公开访问）"""
+        import time
+        from tools.opencli_runner import OpenCLIRunner
+
+        opencli_cfg = config.get("opencli", {})
+        if not opencli_cfg.get("enabled", True):
+            return []
+
+        timeout = opencli_cfg.get("timeout_seconds", 90)
+        runner = OpenCLIRunner(timeout=timeout)
+        if not runner.is_available():
+            logger.warning("  [万方] OpenCLI 不可用，跳过")
+            return []
+
+        max_results = config.get("workflow", {}).get("collect", {}).get("search_results_per_keyword", 5)
+        all_papers = []
+        for query in queries:
+            try:
+                time.sleep(10)  # 万方公开 API，保守限速
+                papers = runner.search_wanfang(query, max_results=max_results)
+                all_papers.extend(papers)
+            except Exception as e:
+                logger.warning(f"  [万方] '{query}' 失败: {str(e)[:80]}")
+
+        # URL 去重
+        seen = set()
+        unique = []
+        for p in all_papers:
+            key = p.get("url") or p.get("title", "")
+            if key not in seen:
+                seen.add(key)
+                unique.append(p)
+        return unique
+
+    @staticmethod
+    def _collect_baidu_scholar_via_opencli(queries: list[str], config: dict) -> list[dict]:
+        """从百度学术收集中文论文（OpenCLI，公开访问）"""
+        import time
+        from tools.opencli_runner import OpenCLIRunner
+
+        opencli_cfg = config.get("opencli", {})
+        if not opencli_cfg.get("enabled", True):
+            return []
+
+        timeout = opencli_cfg.get("timeout_seconds", 90)
+        runner = OpenCLIRunner(timeout=timeout)
+        if not runner.is_available():
+            logger.warning("  [百度学术] OpenCLI 不可用，跳过")
+            return []
+
+        max_results = config.get("workflow", {}).get("collect", {}).get("search_results_per_keyword", 5)
+        all_papers = []
+        for query in queries:
+            try:
+                time.sleep(8)
+                papers = runner.search_baidu_scholar(query, max_results=max_results)
+                all_papers.extend(papers)
+            except Exception as e:
+                logger.warning(f"  [百度学术] '{query}' 失败: {str(e)[:80]}")
+
+        seen = set()
+        unique = []
+        for p in all_papers:
+            key = p.get("url") or p.get("title", "")
+            if key not in seen:
+                seen.add(key)
+                unique.append(p)
+        return unique
+
+    @staticmethod
+    def _collect_cnki_via_opencli(queries: list[str], config: dict) -> list[dict]:
+        """从CNKI知网收集中文论文（OpenCLI，需登录，当前因验证码不可用）"""
+        import time
+        from tools.opencli_runner import OpenCLIRunner
+
+        opencli_cfg = config.get("opencli", {})
+        if not opencli_cfg.get("enabled", True):
+            return []
+
+        timeout = opencli_cfg.get("timeout_seconds", 90)
+        runner = OpenCLIRunner(timeout=timeout)
+        if not runner.is_available():
+            logger.warning("  [CNKI] OpenCLI 不可用，跳过")
+            return []
+
+        max_results = config.get("workflow", {}).get("collect", {}).get("search_results_per_keyword", 5)
+        all_papers = []
+        for query in queries:
+            try:
+                time.sleep(12)
+                papers = runner.search_cnki(query, max_results=max_results)
+                all_papers.extend(papers)
+            except Exception as e:
+                logger.warning(f"  [CNKI] '{query}' 失败: {str(e)[:80]}")
+
+        seen = set()
+        unique = []
+        for p in all_papers:
+            key = p.get("url") or p.get("title", "")
+            if key not in seen:
+                seen.add(key)
+                unique.append(p)
+        return unique
 
         return papers

@@ -48,26 +48,30 @@ IMPORTANT: Return ONLY the JSON array, no explanation, no code blocks."""
         all_raw = []
 
         # 步骤1: RSS 订阅
-        logger.info("  [1/4] RSS 订阅源...")
+        logger.info("  [1/5] RSS 订阅源...")
         rss_items = self._collect_rss()
         all_raw.extend(rss_items)
         logger.info(f"        RSS 获取 {len(rss_items)} 条")
 
         # 步骤2: 主动搜索
-        logger.info("  [2/4] 主动搜索新闻...")
+        logger.info("  [2/5] 主动搜索新闻...")
         search_items = self._search_news()
         all_raw.extend(search_items)
         logger.info(f"        搜索获取 {len(search_items)} 条")
 
         # 步骤3: 爬取搜索结果中的网页（深度内容）
-        logger.info("  [3/4] 爬取详细内容...")
+        logger.info("  [3/5] 爬取详细内容...")
         enriched = self._enrich_with_content(all_raw)
 
         # 步骤4: Hacker News 搜索
-        logger.info("  [4/4] Hacker News 搜索...")
+        logger.info("  [4/5] Hacker News 搜索...")
         hn_items = self._search_hn()
         enriched.extend(hn_items)
         logger.info(f"        HN 获取 {len(hn_items)} 条")
+
+        # 步骤5: 小红书关键词搜索（OpenCLI，本地运行生效）
+        xhs_items = self._search_xiaohongshu()
+        enriched.extend(xhs_items)
 
         # 去重和清洗
         cleaned = self._deduplicate(enriched)
@@ -315,3 +319,41 @@ IMPORTANT: Return ONLY valid JSON, no code blocks.""",
                 except Exception:
                     continue
         return None
+
+    def _search_xiaohongshu(self) -> list[dict]:
+        """通过 OpenCLI 搜索小红书关键词内容"""
+        try:
+            from tools.opencli_runner import OpenCLIRunner
+        except ImportError:
+            return []
+
+        keywords = self.config.get("xiaohongshu_keywords", [])
+        if not keywords:
+            return []
+
+        opencli_cfg = self.config.get("opencli", {})
+        if not opencli_cfg.get("enabled", True):
+            return []
+
+        timeout = opencli_cfg.get("timeout_seconds", 90)
+        runner = OpenCLIRunner(timeout=timeout)
+        if not runner.is_available():
+            logger.warning("  [小红书] OpenCLI 不可用，跳过")
+            return []
+
+        import time
+        max_results = self.config.get("workflow", {}).get("collect", {}).get("search_results_per_keyword", 5)
+        all_items = []
+        logger.info("  [5/5] 小红书关键词搜索（OpenCLI）...")
+
+        for query in keywords:
+            try:
+                time.sleep(8)  # 限速
+                results = runner.search_xiaohongshu(query, max_results=max_results)
+                if results:
+                    logger.info(f"    [小红书] '{query}': {len(results)} 条")
+                all_items.extend(results)
+            except Exception as e:
+                logger.warning(f"    [小红书失败] '{query}': {str(e)[:80]}")
+
+        return all_items
