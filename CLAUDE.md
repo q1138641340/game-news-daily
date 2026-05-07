@@ -1,8 +1,29 @@
 # CLAUDE.md — Daily News Workflow
 
-游戏研究日报自动生成项目。多 Agent 流水线，105 RSS 源 → 4 层去重 → 双重审查 → Markdown 日报。
+游戏研究日报自动生成项目。Mac + Win + GitHub Actions 三端协同，105+ RSS 源 → 4 层去重 → 双重审查 → Markdown 日报。
 
-## 架构
+## 协同架构
+
+```
+Mac (代码开发 & 轻量验证)
+  │ git push
+  ▼
+GitHub (q1138641340/game-news-daily)
+  │
+  ├── 02:30 BJT — GitHub Actions 云端采集 105 RSS
+  ├── 03:00 BJT — Win Task Scheduler 全量采集 (含 OpenCLI)
+  └── Obsidian vault ← git pull 拉取日报
+```
+
+**两端分工：**
+| | Mac | Win |
+|---|-----|-----|
+| 角色 | 代码开发、原型验证 | 重负载采集、定时任务 |
+| 采集内容 | 105 RSS (按需) | 105 RSS + 万方 + 百度学术 + 小红书 |
+| 依赖 | 无 | Chrome + OpenCLI 扩展 |
+| 脚本 | `run-sync.sh` | `run-win.bat` |
+
+## 流水线架构
 
 ```
 Phase 0: 跨天去重 (DedupCache, 90天)
@@ -52,6 +73,25 @@ Phase 6: 保存 + 标记去重缓存
 | Weibo RSS Bridge | weibo-rss-bridge.vercel.app | 微博→RSS | SUB (2026-05-06 设置) |
 | Nitter | nitter.net | X/Twitter→RSS | 无需 |
 
+## OpenCLI 集成（需 Chrome 扩展，仅 Win 端）
+
+| 源 | 命令 | 访问级别 |
+|---|------|---------|
+| 万方 | `opencli wanfang search` | 公开 |
+| 百度学术 | `opencli baidu-scholar search` | 公开 |
+| 小红书 | `opencli xiaohongshu search` | 需登录 |
+| CNKI | `opencli cnki search` | 验证码堵死 |
+
+封装于 `tools/opencli_runner.py`，fail-open 设计。
+
+## 协同脚本
+
+| 脚本 | 平台 | 用途 |
+|------|------|------|
+| `run-sync.sh` | Mac | git pull → [采集] → git push |
+| `run-win.bat` | Win | git pull → 全量采集 → git push |
+| `run-local.sh` | Mac | 旧版本地脚本（输出到 iCloud vault） |
+
 ## 环境变量
 
 - `KIMI_API_KEY` / `KIMI_BASE_URL` — 审查阶段
@@ -61,13 +101,20 @@ Phase 6: 保存 + 标记去重缓存
 
 ## 定时运行
 
-GitHub Actions: `UTC 18:30 = 北京时间 02:30`
+| 时间 (BJT) | 平台 | 采集内容 |
+|-----------|------|---------|
+| 02:30 | GitHub Actions (云端) | 105 RSS 源 |
+| 03:00 | Win Task Scheduler | 105 RSS + 万方 + 百度学术 + 小红书 |
+
+Mac 端按需运行 `bash run-sync.sh --collect`。
 
 ## 维护提醒
 
 - 微博 SUB cookie 有效期约 3-6 月，下次更新: 2026-08 前
 - 4 个学术 RSS 源可能失效 (Game Studies/DiGRA/SAGE)，不影响整体运行
-- 小红书和 Facebook 目前不可行 (无公开 API)
+- Facebook 不可行 (需 Meta Developer App)
+- CNKI 知网被验证码堵死，用万方+百度学术替代
+- OpenCLI Chrome 扩展需保持连接（Win 端）
 
 ## 常见操作
 
