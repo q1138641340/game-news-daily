@@ -68,26 +68,26 @@ class AcademicCollectorAgent:
         humanities_kw = academic_kw.get("humanities", [])
         zh_kw = academic_kw.get("zh", [])
 
-        # 步骤1: arXiv（技术类论文）
-        logger.info("  [1/4] arXiv 论文（技术类）...")
+# 步骤1: arXiv（技术类论文）
+        logger.info("  [1/5] arXiv 论文（技术类）...")
         arxiv_papers = self._collect_arxiv(tech_kw)
         all_papers.extend(arxiv_papers)
         logger.info(f"        arXiv 获取 {len(arxiv_papers)} 篇")
 
         # 步骤2: Semantic Scholar（人文艺术类）
-        logger.info("  [2/4] Semantic Scholar（人文艺术类）...")
+        logger.info("  [2/5] Semantic Scholar（人文艺术类）...")
         ss_papers = self._collect_semantic_scholar(humanities_kw)
         all_papers.extend(ss_papers)
         logger.info(f"        Semantic Scholar 获取 {len(ss_papers)} 篇")
 
         # 步骤3: CrossRef（人文艺术 + 中文期刊）
-        logger.info("  [3/4] CrossRef 期刊（人文+中文）...")
+        logger.info("  [3/5] CrossRef 期刊（人文+中文）...")
         crossref_papers = self._collect_crossref(humanities_kw + zh_kw)
         all_papers.extend(crossref_papers)
         logger.info(f"        CrossRef 获取 {len(crossref_papers)} 篇")
 
         # 步骤4: DBLP（计算机科学文献）
-        logger.info("  [4/4] DBLP 计算机科学...")
+        logger.info("  [4/5] DBLP 计算机科学...")
         dblp_papers = self._collect_dblp()
         all_papers.extend(dblp_papers)
         logger.info(f"        DBLP 获取 {len(dblp_papers)} 篇")
