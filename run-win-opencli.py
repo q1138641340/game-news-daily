@@ -87,63 +87,65 @@ def main():
         return
 
     # ---- 输出为补充文件 ----
+    # ---- 追加到日报 ----
     output_dir = os.path.join(os.path.dirname(__file__), "output", today)
-    os.makedirs(output_dir, exist_ok=True)
-    supplement_path = os.path.join(output_dir, "OpenCLI-Supplement.md")
+    report_path = os.path.join(output_dir, "Daily-Report.md")
 
-    lines = [
-        f"## OpenCLI 补充内容 ({today})",
-        "",
-        f"> 由 Windows 端在 {datetime.now().strftime('%H:%M')} 自动采集，补充 GitHub Actions 无法抓取的中文源。",
-        "",
-        f"**万方**: {sum(1 for i in fresh if i.get('source')=='万方')} 篇 | "
-        f"**百度学术**: {sum(1 for i in fresh if i.get('source')=='百度学术')} 篇 | "
-        f"**小红书**: {sum(1 for i in fresh if i.get('source')=='小红书')} 条",
+    # 读取 GH Actions 生成的日报
+    if os.path.exists(report_path):
+        with open(report_path, "r", encoding="utf-8") as f:
+            existing = f.read()
+    else:
+        existing = ""
+
+    # 构建补充内容
+    supplement = [
         "",
         "---",
-        ""
+        "",
+        "## OpenCLI 补充内容（Win 端自动采集）",
+        "",
+        f"> {datetime.now().strftime('%H:%M')} 采集 | "
+        f"万方 {sum(1 for i in fresh if i.get('source')=='万方')} 篇 | "
+        f"百度学术 {sum(1 for i in fresh if i.get('source')=='百度学术')} 篇 | "
+        f"小红书 {sum(1 for i in fresh if i.get('source')=='小红书')} 条",
+        "",
     ]
 
-    # 万方/百度学术 → 论文格式
-    academic = [i for i in fresh if i.get("source") in ("万方", "百度学术")]
-    if academic:
-        lines.append("### 中文期刊论文")
-        lines.append("")
-        for paper in academic:
-            lines.append(f"**{paper['title']}**")
-            lines.append(f"- 作者: {paper.get('authors', '未知')}")
-            if paper.get("venue"):
-                lines.append(f"- 来源: {paper['venue']}")
-            if paper.get("published_date"):
-                lines.append(f"- 日期: {paper['published_date']}")
-            if paper.get("url"):
-                lines.append(f"- 链接: {paper['url']}")
-            lines.append("")
+    # 万方/百度学术 → 论文
+    for paper in [i for i in fresh if i.get("source") in ("万方", "百度学术")]:
+        supplement.append(f"### {paper['title']}")
+        supplement.append(f"- **作者**: {paper.get('authors', '未知')}")
+        if paper.get("venue"):
+            supplement.append(f"- **来源**: {paper['venue']}")
+        if paper.get("published_date"):
+            supplement.append(f"- **日期**: {paper['published_date']}")
+        if paper.get("url"):
+            supplement.append(f"- **链接**: {paper['url']}")
+        supplement.append("")
 
-    # 小红书 → 新闻格式
-    xhs = [i for i in fresh if i.get("source") == "小红书"]
-    if xhs:
-        lines.append("### 小红书内容")
-        lines.append("")
-        for post in xhs:
-            author = post.get("author", "?")
-            title = post.get("title", "")
-            url = post.get("url", "")
-            likes = post.get("likes", "")
-            date = post.get("date", "")
-            lines.append(f"- **{title}** — @{author}  |  {likes}赞  |  {date}")
-            if url:
-                lines.append(f"  {url}")
-            lines.append("")
+    # 小红书 → 新闻
+    for post in [i for i in fresh if i.get("source") == "小红书"]:
+        title = post.get("title", "")
+        author = post.get("author", "?")
+        url = post.get("url", "")
+        likes = post.get("likes", "")
+        date_str = post.get("date", "")
+        supplement.append(f"- **{title}** — @{author} | {likes}赞 | {date_str}")
+        if url:
+            supplement.append(f"  {url}")
+        supplement.append("")
 
-    with open(supplement_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
+    # 写入：原日报 + 补充内容
+    merged = existing.rstrip() + "\n" + "\n".join(supplement) + "\n"
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write(merged)
 
     # 标记去重
     cache.mark_batch_seen(fresh)
     cache.save(cache_path)
 
-    logger.info(f"补充文件已保存: {supplement_path}")
+    logger.info(f"已追加到日报: {report_path}")
     logger.info(f"总计: {len(fresh)} 条新内容")
 
 
