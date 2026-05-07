@@ -92,6 +92,14 @@ class AcademicCollectorAgent:
         all_papers.extend(dblp_papers)
         logger.info(f"        DBLP 获取 {len(dblp_papers)} 篇")
 
+        # 步骤5: PubScholar（中文公益学术平台）
+        pubscholar_kw = academic_kw.get("pubscholar", [])
+        if pubscholar_kw:
+            logger.info("  [5/5] PubScholar（中文公益学术）...")
+            pubscholar_papers = self._collect_pubscholar(pubscholar_kw)
+            all_papers.extend(pubscholar_papers)
+            logger.info(f"        PubScholar 获取 {len(pubscholar_papers)} 篇")
+
         # LLM 清洗和评估
         if all_papers:
             cleaned = self._clean_with_llm(all_papers)
@@ -198,8 +206,9 @@ class AcademicCollectorAgent:
                     url = "https://api.semanticscholar.org/graph/v1/paper/search"
                     params = {
                         "query": query,
-                        "limit": 5,
-                        "fields": "title,authors,abstract,url,externalIds,venue,publicationDate,openAccessPdf",
+                        "limit": 10,
+                        "offset": 0,
+                        "fields": "title,authors,abstract,url,externalIds,venue,publicationDate,openAccessPdf,citationCount,year,fieldsOfStudy,S2FieldsOfStudy",
                         "year": f"{datetime.now().year-1}-{datetime.now().year}"
                     }
                     resp = self.session.get(url, params=params, timeout=20)
@@ -451,6 +460,53 @@ class AcademicCollectorAgent:
         unique = []
         for p in all_papers:
             key = p.get("doi") or p["title"]
+            if key and key not in seen:
+                seen.add(key)
+                unique.append(p)
+
+        return unique
+
+    def _collect_pubscholar(self, queries: list[str]) -> list[dict]:
+        """从 PubScholar 收集中文论文（公益学术平台）"""
+        from tools.pubscholar_scraper import PubScholarScraper
+        import time
+
+        scraper = PubScholarScraper()
+        all_papers = []
+
+        for query in queries:
+            for attempt in range(2):  # 最多2次重试
+                try:
+                    time.sleep(60)  # 60秒间隔防爬
+                    papers = scraper.search(query, max_results=10)
+                    for paper in papers:
+                        all_papers.append({
+                            "title": paper.get("title", ""),
+                            "authors": paper.get("authors", ""),
+                            "abstract": paper.get("abstract", ""),
+                            "url": paper.get("url", ""),
+                            "doi": paper.get("doi", ""),
+                            "pdf_url": paper.get("pdf_url", ""),
+                            "venue": paper.get("venue", "PubScholar"),
+                            "published_date": paper.get("published_date", ""),
+                            "category": "chinese-academic"
+                        })
+                    if papers:
+                        logger.info(f"        [PubScholar成功] {query}: {len(papers)} 篇")
+                    break
+                except Exception as e:
+                    if attempt < 1:
+                        wait_time = 30
+                        logger.warning(f"        [PubScholar失败，等待{wait_time}秒重试...]")
+                        time.sleep(wait_time)
+                    else:
+                        logger.warning(f"        [PubScholar失败] {query}: {str(e)[:60]}")
+
+        # 去重
+        seen = set()
+        unique = []
+        for p in all_papers:
+            key = p.get("doi") or p.get("url") or p.get("title")
             if key and key not in seen:
                 seen.add(key)
                 unique.append(p)
