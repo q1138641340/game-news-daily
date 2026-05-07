@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Win 端轻量采集脚本 — 只跑 OpenCLI 源（万方/百度学术/小红书）
-不重复 GH Actions 已完成的 105 RSS + 学术 API + LLM 审查
+Win 端轻量采集 — 万方/百度学术/小红书 → 存为 pending 数据
+GH Actions 在下次运行时 git pull 拉取，进入 LLM 审查流水线
 """
 
 import sys, os, time, logging, json
@@ -31,41 +31,34 @@ def main():
         logger.warning("OpenCLI 不可用，退出")
         return
 
-    today = datetime.now().strftime("%Y-%m-%d")
     items = []
 
     # ---- 万方 ----
-    wanfang_kw = config.get("academic_keywords", {}).get("wanfang", [])
-    for kw in wanfang_kw:
+    for kw in config.get("academic_keywords", {}).get("wanfang", []):
         try:
             results = runner.search_wanfang(kw, max_results=5)
             items.extend(results)
-            if results:
-                logger.info(f"  [万方] '{kw}': {len(results)} 条")
+            if results: logger.info(f"  [万方] '{kw}': {len(results)} 条")
             time.sleep(10)
         except Exception as e:
             logger.warning(f"  [万方失败] '{kw}': {e}")
 
     # ---- 百度学术 ----
-    baidu_kw = config.get("academic_keywords", {}).get("baidu_scholar", [])
-    for kw in baidu_kw:
+    for kw in config.get("academic_keywords", {}).get("baidu_scholar", []):
         try:
             results = runner.search_baidu_scholar(kw, max_results=5)
             items.extend(results)
-            if results:
-                logger.info(f"  [百度学术] '{kw}': {len(results)} 条")
+            if results: logger.info(f"  [百度学术] '{kw}': {len(results)} 条")
             time.sleep(8)
         except Exception as e:
             logger.warning(f"  [百度学术失败] '{kw}': {e}")
 
     # ---- 小红书 ----
-    xhs_kw = config.get("xiaohongshu_keywords", [])
-    for kw in xhs_kw:
+    for kw in config.get("xiaohongshu_keywords", []):
         try:
             results = runner.search_xiaohongshu(kw, max_results=5)
             items.extend(results)
-            if results:
-                logger.info(f"  [小红书] '{kw}': {len(results)} 条")
+            if results: logger.info(f"  [小红书] '{kw}': {len(results)} 条")
             time.sleep(8)
         except Exception as e:
             logger.warning(f"  [小红书失败] '{kw}': {e}")
@@ -86,67 +79,37 @@ def main():
         logger.info("去重后无新内容")
         return
 
-    # ---- 输出为补充文件 ----
-    # ---- 追加到日报 ----
-    output_dir = os.path.join(os.path.dirname(__file__), "output", today)
-    report_path = os.path.join(output_dir, "Daily-Report.md")
+    # ---- 存为 pending 数据，等 GH Actions 下次运行时拉取并入审查流水线 ----
+    # 不直接改日报，让 GH Actions 的 LLM 审查 + 格式化统一处理
+    pending_dir = os.path.join(os.path.dirname(__file__), "output", ".cache")
+    os.makedirs(pending_dir, exist_ok=True)
+    pending_path = os.path.join(pending_dir, "opencli-pending.json")
 
-    # 读取 GH Actions 生成的日报
-    if os.path.exists(report_path):
-        with open(report_path, "r", encoding="utf-8") as f:
-            existing = f.read()
-    else:
-        existing = ""
+    # 读取已有 pending（防止覆盖）
+    existing = []
+    if os.path.exists(pending_path):
+        try:
+            with open(pending_path, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+        except Exception:
+            pass
 
-    # 构建补充内容
-    supplement = [
-        "",
-        "---",
-        "",
-        "## OpenCLI 补充内容（Win 端自动采集）",
-        "",
-        f"> {datetime.now().strftime('%H:%M')} 采集 | "
-        f"万方 {sum(1 for i in fresh if i.get('source')=='万方')} 篇 | "
-        f"百度学术 {sum(1 for i in fresh if i.get('source')=='百度学术')} 篇 | "
-        f"小红书 {sum(1 for i in fresh if i.get('source')=='小红书')} 条",
-        "",
-    ]
+    # 合并，URL + 标题去重
+    seen = {(i.get("url"), i.get("title")) for i in existing}
+    for item in fresh:
+        key = (item.get("url"), item.get("title"))
+        if key not in seen:
+            existing.append(item)
+            seen.add(key)
 
-    # 万方/百度学术 → 论文
-    for paper in [i for i in fresh if i.get("source") in ("万方", "百度学术")]:
-        supplement.append(f"### {paper['title']}")
-        supplement.append(f"- **作者**: {paper.get('authors', '未知')}")
-        if paper.get("venue"):
-            supplement.append(f"- **来源**: {paper['venue']}")
-        if paper.get("published_date"):
-            supplement.append(f"- **日期**: {paper['published_date']}")
-        if paper.get("url"):
-            supplement.append(f"- **链接**: {paper['url']}")
-        supplement.append("")
+    with open(pending_path, "w", encoding="utf-8") as f:
+        json.dump(existing, f, ensure_ascii=False, indent=2)
 
-    # 小红书 → 新闻
-    for post in [i for i in fresh if i.get("source") == "小红书"]:
-        title = post.get("title", "")
-        author = post.get("author", "?")
-        url = post.get("url", "")
-        likes = post.get("likes", "")
-        date_str = post.get("date", "")
-        supplement.append(f"- **{title}** — @{author} | {likes}赞 | {date_str}")
-        if url:
-            supplement.append(f"  {url}")
-        supplement.append("")
-
-    # 写入：原日报 + 补充内容
-    merged = existing.rstrip() + "\n" + "\n".join(supplement) + "\n"
-    with open(report_path, "w", encoding="utf-8") as f:
-        f.write(merged)
-
-    # 标记去重
     cache.mark_batch_seen(fresh)
     cache.save(cache_path)
 
-    logger.info(f"已追加到日报: {report_path}")
-    logger.info(f"总计: {len(fresh)} 条新内容")
+    logger.info(f"✅ 待处理数据: {pending_path} ({len(existing)} 条)")
+    logger.info("   GH Actions 下次运行时会 git pull 这些数据，进入 LLM 审查流程")
 
 
 if __name__ == "__main__":

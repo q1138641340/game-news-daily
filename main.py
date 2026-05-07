@@ -132,8 +132,9 @@ def main():
 
         # ============================================================
         # Phase 0: 加载跨天去重缓存
+        output_dir = os.path.join(os.path.dirname(__file__), "output")
         # ============================================================
-        cache_dir = os.path.join(os.path.dirname(__file__), "output", ".cache")
+        cache_dir = os.path.join(output_dir, ".cache")
         cache_path = os.path.join(cache_dir, "seen_items.json")
         dedup_cache = DedupCache(max_age_days=90)
         dedup_cache.load(cache_path)
@@ -154,9 +155,22 @@ def main():
         academic_agent = AcademicCollectorAgent(config, dedup_cache)
         paper_items = academic_agent.run()
 
+        # ---- 加载 Win 端 OpenCLI 待处理数据 ----
+        pending_opencli = os.path.join(output_dir, ".cache", "opencli-pending.json")
+        opencli_items = []
+        if os.path.exists(pending_opencli):
+            try:
+                with open(pending_opencli, "r", encoding="utf-8") as f:
+                    opencli_items = json.load(f)
+                logger.info(f"Loaded {len(opencli_items)} OpenCLI items from Win (万方/百度学术/小红书)")
+                # 加载后清空，防止重复
+                os.remove(pending_opencli)
+            except Exception as e:
+                logger.warning(f"Failed to load OpenCLI pending data: {e}")
+
         # 合并
-        all_items = news_items + paper_items
-        logger.info(f"Total collected: {len(all_items)} items (News: {len(news_items)}, Papers: {len(paper_items)})")
+        all_items = news_items + paper_items + opencli_items
+        logger.info(f"Total collected: {len(all_items)} items (News: {len(news_items)}, Papers: {len(paper_items)}, OpenCLI: {len(opencli_items)})")
 
         if not all_items:
             logger.warning("No items collected. Creating empty report.")
