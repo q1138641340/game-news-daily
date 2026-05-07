@@ -25,10 +25,13 @@ class AcademicCollectorAgent:
 4. 保留相关性 >= 0.3 的论文
 5. 分类：game-studies（游戏研究）、narratology（叙事学）、media-theory（媒介理论）、ai-games（游戏AI）、hci（人机交互）、cs-graphics（计算机图形）、cs-ai（人工智能）、methodology（方法论）、chinese-academic（国内学术）
 
-关于作者格式：
+关于作者格式（**最重要**）：
+- **禁止使用"未提供"、"未知"、"unknown"等占位符**
+- 输入数据中的 authors 字段是你唯一的作者信息来源，必须原样保留或进行最小程度的格式化
 - 英文名：姓，名（格式：LastName, FirstName 或 LastName F.）
 - 中文名：姓+名（格式：张三）
 - 多个作者用逗号分隔，最多列出前8位
+- 如果输入中 authors 为空字符串或 null，只保留DOI和标题信息，authors 字段设为空字符串 ""，不要填任何占位符
 
 关于DOI：
 - arXiv论文格式：10.48550/arXiv.XXXXXXX
@@ -36,7 +39,7 @@ class AcademicCollectorAgent:
 
 返回JSON数组。每条必须包含：
 - title: string
-- authors: string（逗号分隔的完整作者列表）
+- authors: string（逗号分隔的完整作者列表，绝对不要是"未提供"）
 - abstract: string（关键发现2-4句）
 - url: string
 - doi: string 或 null
