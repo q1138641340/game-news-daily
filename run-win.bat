@@ -50,24 +50,26 @@ if %errorlevel% neq 0 (
     echo   WARNING: git pull 失败，继续用本地版本运行
 )
 
-REM ---- Step 2: 采集 ----
+REM ---- Step 2: OpenCLI 采集（仅万方/百度学术/小红书，不重复 GH 的工作）----
 echo.
-echo [Step 2/4] 运行全量采集...
-mkdir output\.cache 2>nul
+echo [Step 2/4] 运行 OpenCLI 采集...
+mkdir output\.cache output\%TODAY% 2>nul
 
-python main.py > output\workflow.log 2>&1
+python run-win-opencli.py > output\win-opencli.log 2>&1
 set EXIT_CODE=%errorlevel%
 
 if %EXIT_CODE% neq 0 (
     echo   ERROR: 采集失败 (exit %EXIT_CODE%)
-    type output\workflow.log | findstr /C:"ERROR" /C:"失败"
+    type output\win-opencli.log | findstr /C:"ERROR" /C:"失败"
+) else (
+    echo   OK: 万方/百度学术/小红书 采集完成
 )
 
 REM ---- Step 3: 推送结果 ----
 echo.
-echo [Step 3/4] git push 推送日报...
-git add output\ *.yaml *.md 2>nul
-git commit -m "sync: Win 端采集结果 %date%" 2>nul
+echo [Step 3/4] git push 推送补充内容...
+git add output\ *.yaml *.md run-win-opencli.py 2>nul
+git commit -m "sync: Win OpenCLI 补充内容 %date%" 2>nul
 git push origin main 2>&1
 if %errorlevel% neq 0 (
     echo   WARNING: git push 失败
