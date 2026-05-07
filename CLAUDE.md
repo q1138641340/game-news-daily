@@ -5,23 +5,27 @@
 ## 协同架构
 
 ```
-Mac (代码开发 & 轻量验证)
-  │ git push
-  ▼
-GitHub (q1138641340/game-news-daily)
+GitHub (q1138641340/game-news-daily) ← 中转站
   │
-  ├── 02:30 BJT — GitHub Actions 云端采集 105 RSS
-  ├── 03:00 BJT — Win Task Scheduler 全量采集 (含 OpenCLI)
-  └── Obsidian vault ← git pull 拉取日报
+  ├── 02:30 BJT  GH Actions → git pull → 读 Win pending.json
+  │       → 105 RSS + API + LLM审查 → 生成日报 → push vault
+  │
+  ├── 06:00 BJT  Win → OpenCLI(万方/百度学术/小红书)
+  │       → 存 output/.cache/opencli-pending.json → git push
+  │
+  └── Mac (按需) → bash run-sync.sh  原型验证
 ```
+
+**时间关系**：GH Actions 生成昨天日报。Win 06:00 数据 → 第二天 GH 02:30 拉取审查。
 
 **两端分工：**
 | | Mac | Win |
 |---|-----|-----|
-| 角色 | 代码开发、原型验证 | 重负载采集、定时任务 |
-| 采集内容 | 105 RSS (按需) | 105 RSS + 万方 + 百度学术 + 小红书 |
+| 角色 | 代码开发、原型验证 | OpenCLI 采集 |
+| 采集内容 | 按需 | 万方 + 百度学术 + 小红书 |
+| 时长 | — | ~5 分钟 |
 | 依赖 | 无 | Chrome + OpenCLI 扩展 |
-| 脚本 | `run-sync.sh` | `run-win.bat` |
+| 脚本 | `run-sync.sh` | `run-win-opencli.py` |
 
 ## 流水线架构
 
@@ -89,7 +93,7 @@ Phase 6: 保存 + 标记去重缓存
 | 脚本 | 平台 | 用途 |
 |------|------|------|
 | `run-sync.sh` | Mac | git pull → [采集] → git push |
-| `run-win.bat` | Win | git pull → 全量采集 → git push |
+| `run-win-opencli.py` | Win | OpenCLI采集 → 存 pending.json → git push |
 | `run-local.sh` | Mac | 旧版本地脚本（输出到 iCloud vault） |
 
 ## 环境变量
@@ -103,10 +107,10 @@ Phase 6: 保存 + 标记去重缓存
 
 | 时间 (BJT) | 平台 | 采集内容 |
 |-----------|------|---------|
-| 02:30 | GitHub Actions (云端) | 105 RSS 源 |
-| 06:00 | Win Task Scheduler | 105 RSS + 万方 + 百度学术 + 小红书 (GH已完成) |
+| 02:30 | GitHub Actions | 105 RSS + API + 读 Win pending.json + LLM审查 |
+| 06:00 | Win Task Scheduler | OpenCLI(万方/百度学术/小红书) → pending.json |
 
-Mac 端按需运行 `bash run-sync.sh --collect`。
+Mac 端按需运行 `bash run-sync.sh`。
 
 ## 维护提醒
 
