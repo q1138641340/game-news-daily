@@ -27,6 +27,8 @@ class FormatterAgent:
 - 概述当日最重要的3-5项内容
 - 涵盖学术前沿、行业动态、研究趋势
 - 使用学术化语言，客观陈述
+- **格式要求**：每句话不超过50字，信息密集处使用分号分隔；避免单句超过100字
+- 如果内容涉及多个相似事件，合并描述并注明"以下N条来源从不同角度报道了同一事件"
 
 ### 3. 学术论文（核心部分）
 
@@ -273,38 +275,73 @@ Top 3 必读条目：
 请检查配置后重试。"""
 
     def _final_dedup(self, items: list[dict]) -> list[dict]:
-        """最终去重：按标题Jaccard相似度去除重复论文/新闻"""
+        """最终去重：按标题+内容相似度去除重复论文/新闻
+
+        增加内容相似度检测，解决同一事件不同来源标题不同但内容相同的问题。
+        """
         if len(items) <= 3:
             return items
 
         import re
 
-        seen_sigs = set()
+        seen_urls = set()  # URL 精确去重
+        seen_title_sigs = set()  # 标题相似去重
+        seen_content_sigs = set()  # 内容相似去重
         result = []
 
         for item in items:
+            # 1. URL 精确去重
+            url = item.get("url", "")
+            if url and url in seen_urls:
+                continue
+            seen_urls.add(url)
+
             title = (item.get("title", "") or "").strip().lower()
-            # 归一化：去除标点，压缩空格
             sig = re.sub(r'[^\w\s]', '', title)
             sig = re.sub(r'\s+', ' ', sig).strip()
 
-            if len(sig) < 10:  # 标题太短不参与去重
-                result.append(item)
+            # 2. 标题相似度检测（保留给论文用）
+            is_title_dup = False
+            if len(sig) >= 10:
+                for seen_sig in seen_title_sigs:
+                    if self._title_similarity(sig, seen_sig) > 0.85:
+                        is_title_dup = True
+                        break
+
+            # 3. 内容相似度检测（新闻专用，解决不同来源同一事件）
+            is_content_dup = False
+            content = (item.get("clean_content", "") or item.get("summary", "") or "").strip().lower()
+            if content and len(content) > 50:
+                # 提取内容签名：去除标点、压缩空格、取前100字
+                content_sig = re.sub(r'[^\w\s]', '', content)[:200]
+                content_sig = re.sub(r'\s+', ' ', content_sig).strip()
+
+                for seen_content in seen_content_sigs:
+                    if self._content_similarity(content_sig, seen_content) > 0.75:
+                        is_content_dup = True
+                        break
+
+            # 只有当来源相同时才认为内容重复（不同来源的同一事件保留第一条）
+            if is_content_dup and not is_title_dup:
+                # 内容相似但标题不同，可能是不同来源报道同一事件
+                # 检查是否是同一来源
+                source = item.get("source", "")
+                for prev in result:
+                    prev_source = prev.get("source", "")
+                    if source == prev_source and source:  # 同来源跳过
+                        is_content_dup = True
+                        break
+
+            if is_title_dup or is_content_dup:
                 continue
 
-            # 检查是否与已有标题过于相似
-            is_dup = False
-            for seen_sig in seen_sigs:
-                if self._title_similarity(sig, seen_sig) > 0.85:
-                    is_dup = True
-                    break
-
-            if not is_dup:
-                seen_sigs.add(sig)
-                result.append(item)
+            seen_title_sigs.add(sig)
+            if content:
+                seen_content_sigs.add(content[:200] if len(content) > 200 else content)
+            result.append(item)
 
         if len(items) > len(result):
-            logger.info(f"  [最终去重] 过滤 {len(items) - len(result)} 条重复标题")
+            logger.info(f"  [最终去重] 过滤 {len(items) - len(result)} 条（标题+内容相似）")
 
         return result
 
@@ -317,6 +354,27 @@ Top 3 必读条目：
             return 0.0
         intersection = words1 & words2
         union = words1 | words2
+        return len(intersection) / len(union) if union else 0.0
+
+    @staticmethod
+    def _content_similarity(c1: str, c2: str) -> float:
+        """计算两个内容片段的相似度（基于字符n-gram）"""
+        if not c1 or not c2:
+            return 0.0
+
+        # 使用字符级 bigram Jaccard 相似度
+        def get_bigrams(s):
+            s = s.lower()
+            return set(s[i:i+3] for i in range(len(s) - 2))
+
+        bigrams1 = get_bigrams(c1)
+        bigrams2 = get_bigrams(c2)
+
+        if not bigrams1 or not bigrams2:
+            return 0.0
+
+        intersection = bigrams1 & bigrams2
+        union = bigrams1 | bigrams2
         return len(intersection) / len(union) if union else 0.0
 
     @staticmethod

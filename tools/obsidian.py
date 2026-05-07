@@ -130,7 +130,9 @@ class ObsidianWriter:
             return ""
 
         lines = ["\n\n---\n\n## 未能下载的论文\n\n"]
-        lines.append(f"以下论文无法下载 PDF，请通过 DOI 直接访问：\n\n")
+        lines.append(f"""以下论文在相关性审查中得分较高，但因出版平台限制无法获取全文，保留标题供扩展阅读参考。如需阅读全文，可尝试通过 DOI 或原文链接访问出版社网站。
+
+""")
 
         for i, paper in enumerate(failed_papers, 1):
             title = paper.get("title", "Unknown Title")
