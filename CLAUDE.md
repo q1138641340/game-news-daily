@@ -104,7 +104,7 @@ Phase 6: 保存 + 标记去重缓存
 | 时间 (BJT) | 平台 | 采集内容 |
 |-----------|------|---------|
 | 02:30 | GitHub Actions (云端) | 105 RSS 源 |
-| 03:00 | Win Task Scheduler | 105 RSS + 万方 + 百度学术 + 小红书 |
+| 04:30 | Win Task Scheduler | 105 RSS + 万方 + 百度学术 + 小红书 (等GH完成) |
 
 Mac 端按需运行 `bash run-sync.sh --collect`。
 

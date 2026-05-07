@@ -5,7 +5,8 @@ REM 1. git pull   拉取 Mac/GitHub Actions 最新变更
 REM 2. Python采集 运行全量工作流（含 OpenCLI 源）
 REM 3. git push   推送日报结果回 GitHub
 REM
-REM 用于 Windows Task Scheduler 每天 03:00 执行
+REM 用于 Windows Task Scheduler 每天 04:30 执行
+REM GH Actions 02:30 开始，最坏情况 04:00 完成，04:30 安全窗口
 REM ============================================
 
 echo ========================================
@@ -14,9 +15,26 @@ echo ========================================
 
 cd /d "C:\Users\sunjinghe\game-news-daily"
 
-REM ---- Step 0: Chrome 预检 ----
+REM ---- Step 0: 等待 GH Actions 完成 ----
 echo.
-echo [Step 0/4] 检查 OpenCLI 扩展...
+echo [Step 0/4] 检查 GitHub Actions 是否已完成...
+
+REM 获取当前日期
+for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value ^| find "="') do set TODAY=%%I
+set TODAY=%TODAY:~0,4%-%TODAY:~4,2%-%TODAY:~6,2%
+
+REM 尝试拉取，检查是否有今天的日报
+git fetch origin main 2>nul
+git log origin/main --oneline --since="%TODAY%T00:00:00" --grep="daily\|Daily\|report\|Report" -1 | findstr "." >nul
+if %errorlevel% neq 0 (
+    echo   WARNING: 未检测到今天的 GH Actions 日报，继续运行
+) else (
+    echo   OK: GH Actions 日报已就绪
+)
+
+REM ---- Chrome 预检 ----
+echo.
+echo [Step 0b/4] 检查 OpenCLI 扩展...
 opencli doctor 2>&1 | findstr /C:"connected" >nul
 if %errorlevel% neq 0 (
     echo   WARNING: OpenCLI 扩展未连接，中文期刊/小红书将跳过
