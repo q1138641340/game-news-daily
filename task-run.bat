@@ -11,3 +11,5 @@ if exist "output\.cache\opencli-pending.json" (
     git commit -m "sync: Win OpenCLI 采集数据 %date%" 2>nul
     git push origin main 2>nul
 )
+REM ---- 完成后睡眠 ----
+rundll32.exe powrprof.dll,SetSuspendState 0,1,0
