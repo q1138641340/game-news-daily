@@ -10,7 +10,7 @@ Write-Host ''
 Write-Host '=== 1. Cron Git Sync (WSL, /5min) ===' -ForegroundColor Yellow
 $cronLog = 'C:\Users\q1138\game-news-daily\github-sync.log'
 if (Test-Path $cronLog) {
-    $entries = Get-Content $cronLog -Encoding UTF8 | Where-Object { $_ -notmatch '^\s*fatal:|\s*remote:' } | Select-Object -Last 15
+    $entries = Get-Content $cronLog -Encoding UTF8 | Where-Object { $_ -notmatch '^\s*(fatal|remote|error):' } | Select-Object -Last 15
     if ($entries) {
         Write-Host '  Last 15 entries (newest at bottom):'
         foreach ($e in $entries) {
@@ -97,7 +97,8 @@ $wakeEvents = Get-WinEvent -FilterHashtable @{LogName='System';Id=1,42,107} -Max
     Where-Object { $_.TimeCreated -gt (Get-Date).AddDays(-1) }
 if ($wakeEvents) {
     $wakeEvents | Select-Object -First 5 | ForEach-Object {
-        Write-Host ('  [{0}] {1}' -f $_.TimeCreated.ToString('HH:mm:ss'), $_.Message.Substring(0, [Math]::Min(100, $_.Message.Length)))
+        $msg = if ($_.Message) { $_.Message.Substring(0, [Math]::Min(100, $_.Message.Length)) } else { '(no message)' }
+        Write-Host ('  [{0}] {1}' -f $_.TimeCreated.ToString('HH:mm:ss'), $msg)
     }
 } else {
     Write-Host '  No wake/sleep events today'
@@ -107,11 +108,12 @@ if ($wakeEvents) {
 Write-Host ''
 Write-Host '=== 7. Config Check ===' -ForegroundColor Yellow
 $trb = 'C:\Users\q1138\game-news-daily\task-run.bat'
+$sleepOk = $false; $content = ''
 if (Test-Path $trb) {
     Write-Host '  task-run.bat: EXISTS'
     $content = Get-Content $trb -Raw
     if ($content -match 'SetSuspendState') { Write-Host '  Auto-sleep:   ENABLED' -ForegroundColor Green; $sleepOk = $true }
-    else { Write-Host '  Auto-sleep:   MISSING' -ForegroundColor Red; $sleepOk = $false }
+    else { Write-Host '  Auto-sleep:   MISSING' -ForegroundColor Red }
     if ($content -match 'git pull origin') { Write-Host '  Pre-pull:     ENABLED' -ForegroundColor Green }
     else { Write-Host '  Pre-pull:     MISSING' -ForegroundColor Yellow }
     if ($content -match 'Chrome') { Write-Host '  Chrome start: ENABLED' -ForegroundColor Green }
