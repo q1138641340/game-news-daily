@@ -18,7 +18,15 @@ start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-direc
 timeout /t 10 /nobreak > nul
 
 REM ---- Step 3: Run collection ----
-"C:\Users\q1138\AppData\Local\Programs\Python\Python311\python.exe" run-win-opencli.py
+where python >nul 2>&1
+if %errorlevel% equ 0 (
+    python run-win-opencli.py
+) else if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
+    "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" run-win-opencli.py
+) else (
+    echo [%date% %time%] Python not found >> output\task-error.log
+    exit /b 1
+)
 set EXIT_CODE=%ERRORLEVEL%
 
 REM ---- Step 4: git push (only if collection succeeded) ----
