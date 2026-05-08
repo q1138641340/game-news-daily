@@ -107,7 +107,7 @@ class AcademicCollectorAgent:
         wanfang_kw = academic_kw.get("wanfang", [])
         if wanfang_kw:
             logger.info("  [6/8] 万方（OpenCLI）...")
-            wanfang_papers = self._collect_wanfang_via_opencli(wanfang_kw, config)
+            wanfang_papers = self._collect_wanfang_via_opencli(wanfang_kw, self.config)
             all_papers.extend(wanfang_papers)
             logger.info(f"        万方 获取 {len(wanfang_papers)} 篇")
 
@@ -115,7 +115,7 @@ class AcademicCollectorAgent:
         baidu_kw = academic_kw.get("baidu_scholar", [])
         if baidu_kw:
             logger.info("  [7/8] 百度学术（OpenCLI）...")
-            baidu_papers = self._collect_baidu_scholar_via_opencli(baidu_kw, config)
+            baidu_papers = self._collect_baidu_scholar_via_opencli(baidu_kw, self.config)
             all_papers.extend(baidu_papers)
             logger.info(f"        百度学术 获取 {len(baidu_papers)} 篇")
 
@@ -123,7 +123,7 @@ class AcademicCollectorAgent:
         cnki_kw = academic_kw.get("cnki", [])
         if cnki_kw:
             logger.info("  [8/8] CNKI 知网（OpenCLI）...")
-            cnki_papers = self._collect_cnki_via_opencli(cnki_kw, config)
+            cnki_papers = self._collect_cnki_via_opencli(cnki_kw, self.config)
             all_papers.extend(cnki_papers)
             logger.info(f"        CNKI 获取 {len(cnki_papers)} 篇")
 
@@ -430,7 +430,8 @@ class AcademicCollectorAgent:
         for query in queries:
             for attempt in range(3):
                 try:
-                    time.sleep(5 * (attempt + 1))  # 指数退避
+                    if attempt > 0:
+                        time.sleep(5 * attempt)  # 重试退避
                     url = "https://dblp.org/search/publ/api"
                     params = {
                         "q": query,
@@ -481,6 +482,8 @@ class AcademicCollectorAgent:
                         continue
                     else:
                         logger.warning(f"        [DBLP失败] {query}: {str(e)[:60]}")
+
+            time.sleep(3)  # 查询间礼貌延迟
 
         # 去重
         seen = set()
@@ -606,6 +609,8 @@ class AcademicCollectorAgent:
 
         except Exception as e:
             logger.warning(f"        [arXiv XML解析失败]: {e}")
+
+        return papers
 
     @staticmethod
     def _collect_wanfang_via_opencli(queries: list[str], config: dict) -> list[dict]:

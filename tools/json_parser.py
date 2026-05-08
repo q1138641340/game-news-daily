@@ -95,13 +95,19 @@ def parse_json(text: str) -> dict | list:
         except json.JSONDecodeError:
             pass
 
-    # 尝试提取 <think> 标签后的 JSON（MiniMax 等模型的思考过程会包裹 JSON）
-    think_match = re.search(r'<think>\s*(.+?)\s*</think>', text, re.DOTALL)
-    if think_match:
-        think_content = think_match.group(1)
-        # 递归尝试解析思考内容中的 JSON
+    # 尝试提取 </think> 标签后的 JSON（MiniMax/DeepSeek 等模型的思考过程）
+    think_after = re.search(r'</think>\s*(.+)$', text, re.DOTALL)
+    if think_after:
         try:
-            return parse_json(think_content)
+            return parse_json(think_after.group(1))
+        except ValueError:
+            pass
+
+    # 回退：尝试提取 <think> 内部内容（某些模型可能把JSON包在think里）
+    think_inner = re.search(r'<think>\s*(.+?)\s*</think>', text, re.DOTALL)
+    if think_inner:
+        try:
+            return parse_json(think_inner.group(1))
         except ValueError:
             pass
 
