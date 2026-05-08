@@ -4,6 +4,10 @@
 LOGFILE="/mnt/c/Users/q1138/game-news-daily/github-sync.log"
 DATE=$(date)
 
+# Fix WSL DNS for cron jobs
+echo "nameserver 8.8.8.8" > /tmp/resolv.conf.cron 2>/dev/null
+echo "nameserver 1.1.1.1" >> /tmp/resolv.conf.cron 2>/dev/null
+
 cd /mnt/c/Users/q1138/game-news-daily || exit 1
 
 CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
@@ -15,10 +19,10 @@ if [ "$LOCAL" != "$REMOTE" ] && [ -n "$REMOTE" ]; then
   MAX_RETRIES=3
   for i in $(seq 1 $MAX_RETRIES); do
     if git pull origin "$CURRENT_BRANCH" 2>>"$LOGFILE"; then
-      echo "[$DATE] Pull succeeded on attempt $i" >> "$LOGFILE"
+      echo "[$DATE] Pull succeeded" >> "$LOGFILE"
       break
     else
-      echo "[$DATE] Pull failed (attempt $i/$MAX_RETRIES), retrying in ${i}0s..." >> "$LOGFILE"
+      echo "[$DATE] Pull failed (attempt $i/$MAX_RETRIES)" >> "$LOGFILE"
       if [ $i -lt $MAX_RETRIES ]; then
         sleep $((i * 10))
       fi
