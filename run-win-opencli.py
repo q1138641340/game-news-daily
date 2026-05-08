@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def main():
     config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
-    with open(config_path) as f:
+    with open(config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     opencli_cfg = config.get("opencli", {})
