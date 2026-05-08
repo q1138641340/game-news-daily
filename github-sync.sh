@@ -2,6 +2,10 @@
 # GitHub Sync - Every 5 minutes: pull latest code only
 set -euo pipefail
 
+# Clash proxy — required for DNS resolution in WSL cron
+export http_proxy="http://localhost:7890"
+export https_proxy="http://localhost:7890"
+
 LOGFILE="/mnt/c/Users/q1138/game-news-daily/github-sync.log"
 DATE=$(date "+%m-%d %H:%M")
 
