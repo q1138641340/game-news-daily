@@ -1,3 +1,5 @@
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$OutputEncoding = [Text.Encoding]::UTF8
 Write-Host '====================================================' -ForegroundColor Cyan
 Write-Host '  Game News Collection - System Dashboard' -ForegroundColor Cyan
 Write-Host ('  ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')) -ForegroundColor Cyan
@@ -8,7 +10,7 @@ Write-Host ''
 Write-Host '=== 1. Cron Git Sync (WSL, /5min) ===' -ForegroundColor Yellow
 $cronLog = 'C:\Users\q1138\game-news-daily\github-sync.log'
 if (Test-Path $cronLog) {
-    $entries = Get-Content $cronLog | Select-Object -Last 15
+    $entries = Get-Content $cronLog -Encoding UTF8 | Select-Object -Last 15
     if ($entries) {
         Write-Host '  Last 15 entries (newest at bottom):'
         foreach ($e in $entries) {
