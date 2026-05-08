@@ -11,26 +11,27 @@ search_keywords:
   en:
     - "game narrative"
     - "ludology"
-    - "AI game"
+    - "game philosophy"
     - "game art"
     - "cybernetics games"
     - "interactive literature"
+    - "digital theatre"
   zh:
     - "游戏叙事"
     - "游戏研究"
-    - "人工智能游戏"
-    - "游戏开发"
+    - "游戏哲学"
+    - "叙事学"
     - "控制论 游戏"
     - "交互式文学"
+    - "先锋戏剧"
+    - "戏剧理论"
 
 # 学术论文搜索关键词
 academic_keywords:
-  # 技术与工程类（arXiv + DBLP）- 精简，避免过多纯技术
+  # 技术与工程类（arXiv + DBLP）- 严格控制，仅保留最相关
   tech:
     - "game AI"
     - "procedural content generation"
-    - "game engine"
-    - "virtual reality game"
   # 人文艺术与媒介理论类（CrossRef + Semantic Scholar）- 重点扩展
   humanities:
     # 游戏研究核心
@@ -64,10 +65,19 @@ academic_keywords:
     - "transmedia storytelling"
     - "media franchising"
     - "game adaptation"
+    # 戏剧与表演研究
+    - "Shakespeare performance studies"
+    - "avant-garde theatre digital"
+    - "theatre theory performance"
+    - "game philosophy ontology"
+    - "history of computing games"
   # 中文论文（CrossRef 中文搜索）
   zh:
     - "游戏叙事"
     - "游戏研究"
+    - "游戏学"
+    - "游戏哲学"
+    - "叙事学"
     - "人机交互 游戏"
     - "媒介理论 游戏"
     - "数字人文 游戏"
@@ -75,26 +85,47 @@ academic_keywords:
     - "交互式文学"
     - "电子文学"
     - "游戏史"
+    - "戏剧史"
+    - "计算机史"
     - "跨媒体叙事"
+    - "莎士比亚 戏剧"
+    - "先锋戏剧"
+    - "戏剧理论"
 
   # 万方（中文期刊，公开访问）
   wanfang:
     - "游戏研究"
     - "游戏叙事"
+    - "游戏学"
+    - "游戏哲学"
+    - "叙事学"
     - "数字人文"
     - "交互媒体"
     - "游戏设计"
     - "电子游戏"
     - "游戏化学习"
     - "人机交互 游戏"
+    - "莎士比亚 戏剧"
+    - "先锋戏剧"
+    - "戏剧理论"
+    - "游戏史"
+    - "戏剧史"
+    - "计算机史"
 
   # 百度学术（中文论文，跨库搜索）
   baidu_scholar:
     - "游戏研究"
     - "游戏叙事"
+    - "游戏学"
+    - "游戏哲学"
+    - "叙事学"
     - "数字人文 游戏"
     - "交互媒体"
     - "游戏设计"
+    - "莎士比亚 戏剧"
+    - "戏剧理论"
+    - "游戏史"
+    - "戏剧史"
 
   # CNKI 知网（需登录，当前因验证码不可用）
   cnki: []
@@ -122,12 +153,16 @@ opencli:
   pubscholar:
     - "游戏研究"
     - "游戏叙事"
+    - "游戏哲学"
+    - "叙事学"
     - "数字人文"
     - "交互媒体"
     - "计算叙事"
     - "游戏设计"
     - "媒介理论"
     - "人机交互"
+    - "戏剧理论"
+    - "游戏史"
 
 # RSS 订阅源
 rss_feeds:
@@ -390,7 +425,7 @@ workflow:
     min_quality_score: 0.5
     min_relevance_score: 0.3
     # 图形学/理工类论文配额
-    max_cs_graphics_per_batch: 4
+    max_cs_graphics_per_batch: 3
 
   output:
     max_items_per_report: 50
