@@ -43,8 +43,8 @@ class OpenCLIRunner:
         }
         if IS_WINDOWS:
             kwargs["shell"] = True
-            # Windows 需要用字符串拼接命令
-            cmd = " ".join(f'"{a}"' if " " in a else a for a in args)
+            # Windows 需要用字符串拼接命令，统一加 self.path 前缀
+            cmd = " ".join(f'"{a}"' if " " in a else a for a in ([self.path] + args))
             return subprocess.run(cmd, **kwargs)
         else:
             return subprocess.run([self.path] + args, **kwargs)
@@ -55,7 +55,7 @@ class OpenCLIRunner:
             return False
         self._daemon_restarted = True
         try:
-            self._run_cmd(["opencli", "daemon", "restart"])
+            self._run_cmd(["daemon", "restart"])
             logger.info("  [OpenCLI] daemon 已重启")
             return True
         except Exception as e:
@@ -63,12 +63,12 @@ class OpenCLIRunner:
             return False
 
     def is_available(self) -> bool:
-        """检查 OpenCLI 是否可用（daemon + 扩展）"""
+        """检查 OpenCLI 是否可用（daemon + 扩展），自动尝试启动 Chrome"""
         if self._available is not None:
             return self._available
 
         try:
-            result = self._run_cmd([self.path, "doctor"])
+            result = self._run_cmd(["doctor"])
             if "Extension: connected" in result.stdout and result.returncode == 0:
                 self._available = True
                 logger.info("  [OpenCLI] 可用 (扩展已连接)")
@@ -77,21 +77,59 @@ class OpenCLIRunner:
                 if self._restart_daemon():
                     import time
                     time.sleep(3)
-                    result2 = self._run_cmd([self.path, "doctor"])
+                    result2 = self._run_cmd(["doctor"])
                     if "Extension: connected" in result2.stdout:
                         self._available = True
                         logger.info("  [OpenCLI] daemon 重启后可用")
                     else:
+                        # 尝试启动 Chrome
+                        if self._launch_chrome():
+                            time.sleep(5)
+                            result3 = self._run_cmd(["doctor"])
+                            if "Extension: connected" in result3.stdout:
+                                self._available = True
+                                logger.info("  [OpenCLI] Chrome 启动后可用")
+                            else:
+                                self._available = False
+                                logger.warning("  [OpenCLI] Chrome 已启动但扩展未连接")
+                        else:
+                            self._available = False
+                            logger.warning("  [OpenCLI] 扩展未连接且无法启动 Chrome")
+                else:
+                    # 直接尝试启动 Chrome
+                    if self._launch_chrome():
+                        import time
+                        time.sleep(5)
+                        result3 = self._run_cmd(["doctor"])
+                        if "Extension: connected" in result3.stdout:
+                            self._available = True
+                            logger.info("  [OpenCLI] Chrome 启动后可用")
+                        else:
+                            self._available = False
+                            logger.warning("  [OpenCLI] Chrome 已启动但扩展未连接")
+                    else:
                         self._available = False
                         logger.warning("  [OpenCLI] 扩展未连接或不可用")
-                else:
-                    self._available = False
-                    logger.warning("  [OpenCLI] 扩展未连接或不可用")
         except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
             self._available = False
             logger.warning(f"  [OpenCLI] 不可用: {e}")
 
         return self._available
+
+    @staticmethod
+    def _launch_chrome() -> bool:
+        """尝试启动 Chrome 浏览器"""
+        import platform
+        try:
+            if platform.system() == "Windows":
+                subprocess.Popen(["start", "chrome"], shell=True)
+            else:
+                subprocess.Popen(["open", "-a", "Google Chrome"])
+            logger.info("  [OpenCLI] 已尝试启动 Chrome")
+            return True
+        except Exception as e:
+            logger.warning(f"  [OpenCLI] 启动 Chrome 失败: {e}")
+            return False
 
     def search_wanfang(self, query: str, max_results: int = 5) -> list[dict]:
         """万方学术搜索（公开访问）"""
@@ -114,7 +152,7 @@ class OpenCLIRunner:
 
         try:
             result = self._run_cmd([
-                self.path, adapter, "search", query,
+                adapter, "search", query,
                 "--limit", str(max_results), "-f", "json"
             ])
             if result.returncode != 0:
