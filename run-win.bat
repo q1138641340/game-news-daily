@@ -19,8 +19,7 @@ echo ========================================
 REM ---- Step 0: 获取 ISO 日期 + GH Actions 完成检查 ----
 echo.
 echo [Step 0/4] 日期 & GH Actions 检查...
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value ^| find "="') do set TODAY=%%I
-set TODAY=%TODAY:~0,4%-%TODAY:~4,2%-%TODAY:~6,2%
+for /f %%I in ('powershell -Command "Get-Date -Format 'yyyy-MM-dd'"') do set TODAY=%%I
 
 git fetch origin main 2>nul
 git log origin/main --oneline --since="%TODAY%T00:00:00" --grep="daily\|Daily\|report\|Report" -1 | findstr "." >nul
@@ -30,21 +29,7 @@ if %errorlevel% neq 0 (
     echo   OK: %TODAY% GH Actions 日报已就绪
 )
 
-REM ---- Step 0b: Chrome + OpenCLI 预检 ----
-echo.
-echo [Step 0b/4] OpenCLI 扩展检查...
-opencli doctor 2>&1 | findstr /C:"connected" >nul
-if %errorlevel% neq 0 (
-    echo   WARNING: OpenCLI 未连接，尝试重启 daemon...
-    opencli daemon restart 2>nul
-    timeout /t 3 /nobreak >nul
-    opencli doctor 2>&1 | findstr /C:"connected" >nul
-    if %errorlevel% neq 0 (
-        echo   ERROR: OpenCLI 不可用，本次跳过
-        goto :done
-    )
-)
-echo   OK: OpenCLI 已连接
+REM OpenCLI 预检已移入 Python (is_available 含 Chrome 自动启动)
 
 REM ---- Step 1: git pull ----
 echo.
