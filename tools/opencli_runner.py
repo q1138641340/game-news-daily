@@ -124,7 +124,10 @@ class OpenCLIRunner:
             if platform.system() == "Windows":
                 subprocess.Popen(["start", "chrome"], shell=True)
             else:
-                subprocess.Popen(["open", "-a", "Google Chrome"])
+                subprocess.Popen([
+                    "open", "-a", "Google Chrome",
+                    "--args", "--profile-directory=Default"
+                ])
             logger.info("  [OpenCLI] 已尝试启动 Chrome")
             return True
         except Exception as e:
