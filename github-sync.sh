@@ -17,8 +17,8 @@ fi
 LOCAL=$(git rev-parse --short=7 HEAD 2>/dev/null || echo "???")
 MSG=$(git log -1 --format="%s" 2>/dev/null || echo "unknown")
 
-# Must fetch first, otherwise origin/main is stale
-git fetch origin "$CURRENT_BRANCH" --quiet 2>>"$LOGFILE" || true
+# Must fetch first, otherwise origin/main is stale. Exit gracefully on DNS failure.
+git fetch origin "$CURRENT_BRANCH" --quiet 2>/dev/null || true
 REMOTE=$(git rev-parse --short=7 "origin/$CURRENT_BRANCH" 2>/dev/null || echo "")
 
 if [ "$LOCAL" != "$REMOTE" ] && [ -n "$REMOTE" ] && [ "$REMOTE" != "" ]; then

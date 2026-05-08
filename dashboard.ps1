@@ -10,7 +10,7 @@ Write-Host ''
 Write-Host '=== 1. Cron Git Sync (WSL, /5min) ===' -ForegroundColor Yellow
 $cronLog = 'C:\Users\q1138\game-news-daily\github-sync.log'
 if (Test-Path $cronLog) {
-    $entries = Get-Content $cronLog -Encoding UTF8 | Select-Object -Last 15
+    $entries = Get-Content $cronLog -Encoding UTF8 | Where-Object { $_ -notmatch '^\s*fatal:|\s*remote:' } | Select-Object -Last 15
     if ($entries) {
         Write-Host '  Last 15 entries (newest at bottom):'
         foreach ($e in $entries) {
