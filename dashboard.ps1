@@ -112,10 +112,10 @@ $trb = 'C:\Users\q1138\game-news-daily\task-run.bat'
 if (Test-Path $trb) {
     Write-Host '  task-run.bat: EXISTS'
     $content = Get-Content $trb -Raw
-    if ($content -match 'SetSuspendState') { Write-Host '  Auto-sleep:   ENABLED' -ForegroundColor Green }
-    else { Write-Host '  Auto-sleep:   MISSING' -ForegroundColor Red }
-    if ($content -match 'git push origin') { Write-Host '  Git push:     ENABLED' -ForegroundColor Green }
-    else { Write-Host '  Git push:     MISSING' -ForegroundColor Red }
+    if ($content -match 'SetSuspendState') { Write-Host '  Auto-sleep:   ENABLED' -ForegroundColor Green; $sleepOk = $true }
+    else { Write-Host '  Auto-sleep:   MISSING' -ForegroundColor Red; $sleepOk = $false }
+    if ($content -match 'git pull origin') { Write-Host '  Pre-pull:     ENABLED' -ForegroundColor Green }
+    else { Write-Host '  Pre-pull:     MISSING' -ForegroundColor Yellow }
     if ($content -match 'Chrome') { Write-Host '  Chrome start: ENABLED' -ForegroundColor Green }
 } else {
     Write-Host '  task-run.bat: MISSING!' -ForegroundColor Red
@@ -128,8 +128,9 @@ $t = Get-ScheduledTask -TaskName 'DailyNewsOpenCLI' -ErrorAction SilentlyContinu
 $stat = if ($t -and $t.State -eq 'Ready') { 'TASK=READY' } else { 'TASK=MISSING' }
 $wake = if ($t -and $t.Settings.WakeToRun) { 'WAKE=ON' } else { 'WAKE=OFF' }
 $pend = if (Test-Path $pendingFile) { 'PENDING=YES' } else { 'PENDING=NO' }
-$sleep = 'SLEEP=ON'
-Write-Host ('  ' + $stat + ' | ' + $wake + ' | ' + $pend + ' | ' + $sleep) -ForegroundColor Green
+$sleep = if ($sleepOk) { 'SLEEP=ON' } else { 'SLEEP=OFF' }
+$pull = if ($content -match 'git pull origin') { 'PULL=ON' } else { 'PULL=OFF' }
+Write-Host ('  ' + $stat + ' | ' + $wake + ' | ' + $pend + ' | ' + $sleep + ' | ' + $pull) -ForegroundColor Green
 Write-Host '====================================================' -ForegroundColor Cyan
 Write-Host ''
 Read-Host 'Press Enter to close'
