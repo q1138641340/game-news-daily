@@ -8,18 +8,14 @@ Write-Host ''
 Write-Host '=== 1. Cron Git Sync (WSL, /5min) ===' -ForegroundColor Yellow
 $cronLog = 'C:\Users\q1138\game-news-daily\github-sync.log'
 if (Test-Path $cronLog) {
-    $entries = Get-Content $cronLog | Where-Object { $_ -match 'Pull|Sync|Pulling|Failed|Succeeded|Already' } | Select-Object -Last 10
+    $entries = Get-Content $cronLog | Select-Object -Last 15
     if ($entries) {
-        Write-Host ('  (' + $entries.Count + ' recent entries)')
+        Write-Host '  Last 15 entries (newest at bottom):'
         foreach ($e in $entries) {
-            $line = $e.Substring(0, [Math]::Min(100, $e.Length))
-            if ($e -match 'Failed|fatal|error|failed') {
-                Write-Host ('  ' + $line) -ForegroundColor Red
-            } elseif ($e -match 'Succeeded|Already up') {
-                Write-Host ('  ' + $line) -ForegroundColor Green
-            } else {
-                Write-Host ('  ' + $line)
-            }
+            if ($e -match 'FAIL') { Write-Host ('  ' + $e) -ForegroundColor Red }
+            elseif ($e -match 'PULL|OK') { Write-Host ('  ' + $e) -ForegroundColor Green }
+            elseif ($e -match 'SYNC') { Write-Host ('  ' + $e) -ForegroundColor Gray }
+            else { Write-Host ('  ' + $e) }
         }
     } else {
         Write-Host '  No sync activity yet'
