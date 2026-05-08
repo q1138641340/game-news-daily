@@ -4,10 +4,6 @@
 LOGFILE="/mnt/c/Users/q1138/game-news-daily/github-sync.log"
 DATE=$(date)
 
-# Fix WSL DNS for cron jobs
-echo "nameserver 8.8.8.8" > /tmp/resolv.conf.cron 2>/dev/null
-echo "nameserver 1.1.1.1" >> /tmp/resolv.conf.cron 2>/dev/null
-
 cd /mnt/c/Users/q1138/game-news-daily || exit 1
 
 CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
@@ -28,4 +24,6 @@ if [ "$LOCAL" != "$REMOTE" ] && [ -n "$REMOTE" ]; then
       fi
     fi
   done
+else
+  echo "[$DATE] Already up to date" >> "$LOGFILE"
 fi
