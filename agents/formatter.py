@@ -140,7 +140,8 @@ Top 3 必读条目：
         # 按类型分组
         papers = [item for item in items if item.get("category", "") in
                   ("game-studies", "narratology", "media-theory", "ai-games",
-                   "hci", "cs-graphics", "cs-ai", "methodology", "academic")]
+                   "hci", "cs-graphics", "cs-ai", "methodology",
+                   "academic", "chinese-academic")]
         news = [item for item in items if item not in papers]
 
         # 准备输入数据
