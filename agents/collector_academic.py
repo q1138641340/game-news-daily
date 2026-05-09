@@ -388,31 +388,44 @@ class AcademicCollectorAgent:
         if not papers:
             return papers
 
-        try:
-            input_data = str(papers[:50])
-            result = self.mm_client.chat_json(
-                system_prompt=self.SYSTEM_PROMPT,
-                user_message=f"请清洗、评估并分类以下学术论文，返回JSON数组：\n{input_data}",
-                model=self.mm_model,
-                temperature=0.1
-            )
-            if isinstance(result, list):
-                return [p for p in result if p.get("relevance", 0) >= 0.3]
-        except Exception as e:
-            logger.warning(f"        [MiniMax清洗失败，尝试DeepSeek Flash]: {e}")
+        # 批量处理：每次最多 60 篇，避免截断
+        batch_size = 60
+        all_cleaned = []
+
+        for batch_start in range(0, len(papers), batch_size):
+            batch = papers[batch_start:batch_start + batch_size]
             try:
-                result = self.ds_client.chat_json(
+                input_data = str(batch)
+                result = self.mm_client.chat_json(
                     system_prompt=self.SYSTEM_PROMPT,
                     user_message=f"请清洗、评估并分类以下学术论文，返回JSON数组：\n{input_data}",
-                    model=self.ds_model,
+                    model=self.mm_model,
                     temperature=0.1
                 )
                 if isinstance(result, list):
-                    return [p for p in result if p.get("relevance", 0) >= 0.3]
-            except Exception as e2:
-                logger.warning(f"        [DeepSeek Flash 也失败，使用原始数据]: {e2}")
+                    all_cleaned.extend(result)
+                else:
+                    all_cleaned.extend(batch)  # 解析失败保留原始
+            except Exception as e:
+                logger.warning(f"        [MiniMax清洗批次失败，尝试DeepSeek]: {e}")
+                try:
+                    result = self.ds_client.chat_json(
+                        system_prompt=self.SYSTEM_PROMPT,
+                        user_message=f"请清洗、评估并分类以下学术论文，返回JSON数组：\n{input_data}",
+                        model=self.ds_model,
+                        temperature=0.1
+                    )
+                    if isinstance(result, list):
+                        all_cleaned.extend(result)
+                    else:
+                        all_cleaned.extend(batch)
+                except Exception as e2:
+                    logger.warning(f"        [DeepSeek 也失败，保留原始]: {e2}")
+                    all_cleaned.extend(batch)
 
-        return papers
+        if not all_cleaned:
+            return papers
+        return [p for p in all_cleaned if p.get("relevance", 0) >= 0.3]
 
     def _collect_dblp(self) -> list[dict]:
         """从 DBLP 收集计算机科学论文（使用 config tech 关键词）"""
