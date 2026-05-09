@@ -38,8 +38,7 @@ if %EXIT_CODE% equ 0 (
         if %errorlevel% neq 0 (
             echo [%date% %time%] git push failed >> output\task-error.log
         )
-        REM ---- Sleep only after successful push ----
-        rundll32.exe powrprof.dll,SetSuspendState 0,1,0
+        REM Sleep removed — S4 hibernation breaks WakeToRun on this machine
     ) else (
         echo [%date% %time%] No pending data to push >> output\task-error.log
     )
