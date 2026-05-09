@@ -110,6 +110,7 @@ class RelevanceReviewerAgent:
     def __init__(self, config: dict):
         self.config = config
         self.llm, self.model = get_review_kimi()  # Kimi-2.5 审查
+        self.max_cs_graphics = config.get("workflow", {}).get("review", {}).get("max_cs_graphics_per_batch", 3)
 
     def run(self, items: list[dict]) -> list[dict]:
         """
@@ -137,7 +138,7 @@ class RelevanceReviewerAgent:
             1 for item in quality_passed
             if self._is_cs_graphics(item)
         )
-        logger.info(f"    [图形学/理工类论文: {cs_graphics_count} 条，配额: 最多4条/批次]")
+        logger.info(f"    [图形学/理工类论文: {cs_graphics_count} 条，配额: 最多{self.max_cs_graphics}条/批次]")
 
         # 批量审查
         results = []
@@ -251,10 +252,9 @@ class RelevanceReviewerAgent:
             if item.get("approved", False) and self._is_cs_graphics(item)
         ]
 
-        if len(graphics_approved) > 4:
-            # 保留评分最高的4篇，其余标记为不通过
+        if len(graphics_approved) > self.max_cs_graphics:
             graphics_approved.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
-            for item in graphics_approved[4:]:
+            for item in graphics_approved[self.max_cs_graphics:]:
                 item["approved"] = False
                 item["reason"] = item.get("reason", "") + " [超出图形学配额]"
                 logger.info(f"    [排除] 图形学配额超限: {item.get('title', '')[:40]}...")

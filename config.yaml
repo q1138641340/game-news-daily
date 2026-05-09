@@ -151,7 +151,7 @@ xiaohongshu_keywords:
 # OpenCLI 配置
 opencli:
   enabled: true
-  timeout_seconds: 90
+  timeout_seconds: 180
 
   # PubScholar 专用关键词（中文公益学术平台）
   pubscholar:

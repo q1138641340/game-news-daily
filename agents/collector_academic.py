@@ -415,14 +415,13 @@ class AcademicCollectorAgent:
         return papers
 
     def _collect_dblp(self) -> list[dict]:
-        """从 DBLP 收集计算机科学论文（含国内学者英文论文）"""
+        """从 DBLP 收集计算机科学论文（使用 config tech 关键词）"""
         import time
 
-        queries = [
-            "game narrative",
-            "procedural content generation",
+        tech_kw = self.config.get("academic_keywords", {}).get("tech", [])
+        queries = tech_kw if tech_kw else [
             "game AI",
-            "virtual reality game",
+            "procedural content generation",
         ]
 
         all_papers = []

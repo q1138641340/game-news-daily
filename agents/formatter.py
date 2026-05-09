@@ -394,10 +394,17 @@ Top 3 必读条目：
         relevance_passed = stats.get("relevance_passed", 0)
         final_count = stats.get("final_count", len(items))
 
+        # 来源明细
+        news_count = stats.get("news_rss_api", 0)
+        paper_count = stats.get("academic_api", 0)
+        opencli_count = stats.get("opencli_win", 0)
+
         lines.append("### 处理流程")
         lines.append(f"本报告经过 **6 阶段流水线** 处理：")
         lines.append(f"1. **跨天去重** → 加载 90 天历史缓存，过滤已收录 URL/DOI/标题")
-        lines.append(f"2. **信息收集** → RSS + 学术 API + 关键词搜索，共采集 {collected} 条")
+        lines.append(f"2. **信息收集** → 共采集 {collected} 条"
+                     f"（云端 RSS+API: {news_count} 条 | 学术 API: {paper_count} 条"
+                     f" | Win OpenCLI: {opencli_count} 条）")
         lines.append(f"3. **预处理清洗** → LLM 提取正文、去噪、去广告，有效 {preprocessed} 条")
         lines.append(f"4. **质量审查** → 评分过滤，通过 {quality_passed} 条（最低质量分 {meta.get('min_quality', 0.5)}）")
         lines.append(f"5. **相关性审查** → 领域匹配，通过 {relevance_passed} 条（最低相关分 {meta.get('min_relevance', 0.3)}）")

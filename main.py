@@ -236,6 +236,9 @@ def main():
         pipeline_meta = {
             "stats": {
                 "collected": len(all_items),
+                "news_rss_api": len(news_items),
+                "academic_api": len(paper_items),
+                "opencli_win": len(opencli_items),
                 "preprocessed": len(processed_items),
                 "quality_passed": len(quality_passed),
                 "relevance_passed": len(final_items),
