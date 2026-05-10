@@ -227,43 +227,36 @@ class PaperGeneratorAgent:
                 bib = self.citation_tracker.format_bibliography(all_refs)
                 paper += bib
 
-            # ---- 层1: MiniMax 初审（只查致命硬伤，5轮+早停） ----
-            max_loops = 5
-            mini_review_log = []
-            prev_issues = 999
-            for loop in range(max_loops):
-                init_review = self._initial_review_paper(paper, "周论文")
-                mini_review_log.append({"round": loop+1, "issues": init_review["issues"], "passed": init_review["passed"]})
-                if init_review["passed"]:
-                    logger.info(f"  [周论文] MiniMax初审: ✅ 通过 (round {loop+1})")
-                    break
-                if init_review["issues"] >= prev_issues and loop > 0:
-                    logger.info(f"  [周论文] MiniMax初审: 问题未减({prev_issues}→{init_review['issues']}), 早停")
-                    break
-                prev_issues = init_review["issues"]
-                logger.info(f"  [周论文] MiniMax初审: {init_review['issues']}个硬伤，第{loop+1}次修订...")
+            # ---- 层1: MiniMax 初审（只查致命硬伤，审一次改一次） ----
+            init_review = self._initial_review_paper(paper, "周论文")
+            mini_review_log = [{"round": 1, "issues": init_review["issues"], "passed": init_review["passed"]}]
+            if not init_review["passed"]:
+                logger.info(f"  [周论文] MiniMax初审: {init_review['issues']}个硬伤，修订1次...")
                 paper = self._revise_paper(paper, init_review)
+                # 修订后再审一次
+                init_review2 = self._initial_review_paper(paper, "周论文")
+                mini_review_log.append({"round": 2, "issues": init_review2["issues"], "passed": init_review2["passed"]})
+                r2_issues = init_review2["issues"]
+                logger.info(f"  [周论文] MiniMax二轮: {'✅ 通过' if init_review2['passed'] else f'{r2_issues}个问题'}")
+                init_review = init_review2
             else:
-                logger.info(f"  [周论文] MiniMax初审: ⚠ {max_loops}轮上限")
+                logger.info(f"  [周论文] MiniMax初审: ✅ 通过")
 
-            # ---- 层2: Kimi 复审（5轮+早停） ----
-            kimi_review_log = []
-            prev_severe = 999
-            for loop in range(max_loops):
-                kim_review = self._review_paper(paper, "周论文", str(papers_data)[:2000])
-                s, m, mn = kim_review.get("severe", 0), kim_review.get("medium", 0), kim_review.get("minor", 0)
-                kimi_review_log.append({"round": loop+1, "severe": s, "medium": m, "minor": mn, "passed": kim_review["passed"]})
-                if kim_review["passed"]:
-                    logger.info(f"  [周论文] Kimi复审: ✅ 通过 (round {loop+1})")
-                    break
-                if s >= prev_severe and loop > 0:
-                    logger.info(f"  [周论文] Kimi复审: 严重问题未减({prev_severe}→{s}), 早停")
-                    break
-                prev_severe = s
-                logger.info(f"  [周论文] Kimi复审: 严重{s}个, 中等{m}个, 轻微{mn}个，第{loop+1}次修订...")
+            # ---- 层2: Kimi 复审（审一次改一次） ----
+            kim_review = self._review_paper(paper, "周论文", str(papers_data)[:2000])
+            s, m, mn = kim_review.get("severe", 0), kim_review.get("medium", 0), kim_review.get("minor", 0)
+            kimi_review_log = [{"round": 1, "severe": s, "medium": m, "minor": mn, "passed": kim_review["passed"]}]
+            if not kim_review["passed"]:
+                logger.info(f"  [周论文] Kimi复审: 严重{s}个, 中等{m}个, 轻微{mn}个，修订1次...")
                 paper = self._revise_paper(paper, kim_review)
+                # 修订后再审一次
+                kim_review2 = self._review_paper(paper, "周论文", str(papers_data)[:2000])
+                s2, m2, mn2 = kim_review2.get("severe", 0), kim_review2.get("medium", 0), kim_review2.get("minor", 0)
+                kimi_review_log.append({"round": 2, "severe": s2, "medium": m2, "minor": mn2, "passed": kim_review2["passed"]})
+                logger.info(f"  [周论文] Kimi二轮: 严重{s2}个, 中等{m2}个, 轻微{mn2}个")
+                kim_review = kim_review2
             else:
-                logger.info(f"  [周论文] Kimi复审: ⚠ {max_loops}轮上限")
+                logger.info(f"  [周论文] Kimi复审: ✅ 通过")
 
             # ---- 工序证明 ----
             proof = self._build_paper_process_proof(
@@ -330,43 +323,34 @@ class PaperGeneratorAgent:
                 bib = self.citation_tracker.format_bibliography(all_refs)
                 paper += bib
 
-            # ---- 层1: MiniMax 初审（只查致命硬伤，5轮+早停） ----
-            max_loops = 5
-            mini_review_log = []
-            prev_issues = 999
-            for loop in range(max_loops):
-                init_review = self._initial_review_paper(paper, "月论文")
-                mini_review_log.append({"round": loop+1, "issues": init_review["issues"], "passed": init_review["passed"]})
-                if init_review["passed"]:
-                    logger.info(f"  [月论文] MiniMax初审: ✅ 通过 (round {loop+1})")
-                    break
-                if init_review["issues"] >= prev_issues and loop > 0:
-                    logger.info(f"  [月论文] MiniMax初审: 问题未减({prev_issues}→{init_review['issues']}), 早停")
-                    break
-                prev_issues = init_review["issues"]
-                logger.info(f"  [月论文] MiniMax初审: {init_review['issues']}个硬伤，第{loop+1}次修订...")
+            # ---- 层1: MiniMax 初审（只查致命硬伤，审一次改一次） ----
+            init_review = self._initial_review_paper(paper, "月论文")
+            mini_review_log = [{"round": 1, "issues": init_review["issues"], "passed": init_review["passed"]}]
+            if not init_review["passed"]:
+                logger.info(f"  [月论文] MiniMax初审: {init_review['issues']}个硬伤，修订1次...")
                 paper = self._revise_paper(paper, init_review)
+                init_review2 = self._initial_review_paper(paper, "月论文")
+                mini_review_log.append({"round": 2, "issues": init_review2["issues"], "passed": init_review2["passed"]})
+                m2_issues = init_review2["issues"]
+                logger.info(f"  [月论文] MiniMax二轮: {'✅ 通过' if init_review2['passed'] else f'{m2_issues}个问题'}")
+                init_review = init_review2
             else:
-                logger.info(f"  [月论文] MiniMax初审: ⚠ {max_loops}轮上限")
+                logger.info(f"  [月论文] MiniMax初审: ✅ 通过")
 
-            # ---- 层2: Kimi 复审（5轮+早停） ----
-            kimi_review_log = []
-            prev_severe = 999
-            for loop in range(max_loops):
-                kim_review = self._review_paper(paper, "月论文", str(weekly_papers)[:2000])
-                s, m, mn = kim_review.get("severe", 0), kim_review.get("medium", 0), kim_review.get("minor", 0)
-                kimi_review_log.append({"round": loop+1, "severe": s, "medium": m, "minor": mn, "passed": kim_review["passed"]})
-                if kim_review["passed"]:
-                    logger.info(f"  [月论文] Kimi复审: ✅ 通过 (round {loop+1})")
-                    break
-                if s >= prev_severe and loop > 0:
-                    logger.info(f"  [月论文] Kimi复审: 严重问题未减({prev_severe}→{s}), 早停")
-                    break
-                prev_severe = s
-                logger.info(f"  [月论文] Kimi复审: 严重{s}个, 中等{m}个, 轻微{mn}个，第{loop+1}次修订...")
+            # ---- 层2: Kimi 复审（审一次改一次） ----
+            kim_review = self._review_paper(paper, "月论文", str(weekly_papers)[:2000])
+            s, m, mn = kim_review.get("severe", 0), kim_review.get("medium", 0), kim_review.get("minor", 0)
+            kimi_review_log = [{"round": 1, "severe": s, "medium": m, "minor": mn, "passed": kim_review["passed"]}]
+            if not kim_review["passed"]:
+                logger.info(f"  [月论文] Kimi复审: 严重{s}个, 中等{m}个, 轻微{mn}个，修订1次...")
                 paper = self._revise_paper(paper, kim_review)
+                kim_review2 = self._review_paper(paper, "月论文", str(weekly_papers)[:2000])
+                s2, m2, mn2 = kim_review2.get("severe", 0), kim_review2.get("medium", 0), kim_review2.get("minor", 0)
+                kimi_review_log.append({"round": 2, "severe": s2, "medium": m2, "minor": mn2, "passed": kim_review2["passed"]})
+                logger.info(f"  [月论文] Kimi二轮: 严重{s2}个, 中等{m2}个, 轻微{mn2}个")
+                kim_review = kim_review2
             else:
-                logger.info(f"  [月论文] Kimi复审: ⚠ {max_loops}轮上限")
+                logger.info(f"  [月论文] Kimi复审: ✅ 通过")
 
             # ---- 工序证明 ----
             proof = self._build_paper_process_proof(
