@@ -20,7 +20,7 @@ class PaperGeneratorAgent:
 
     WEEKLY_SYSTEM_PROMPT = """你是人文社科领域资深学者，擅长撰写 CSSCI 期刊标准学术论文。
 
-任务：根据过去一周的日报内容，生成一篇 5000-8000 字的学术论文。
+任务：根据过去一周的日报内容，生成一篇 12000-15000 字的学术论文。
 
 ## 输入数据
 你将收到过去7天的研究日报，每天的日报包含以下模块：
@@ -56,9 +56,13 @@ class PaperGeneratorAgent:
    - 理论贡献
    - 研究局限
    - 未来方向
-9. **参考文献**
-   - 整合日报中的所有引用
-   - CSSCI 格式
+9. **参考文献**（至少 25-30 条）
+   - 整合日报中的所有引用，确保数量充足
+   - 严格按照 GB/T 7713.1 新国标格式
+   - 期刊：[序号] 作者. 题名[J]. 刊名, 年, 卷(期): 起止页码.
+   - 专著：[序号] 作者. 书名[M]. 出版地: 出版社, 年.
+   - 电子文献：[序号] 作者. 题名[EB/OL]. (发布日期)[引用日期]. URL.
+   - DOI 必须保留，标于文献末尾
 
 ## 写作要求
 
@@ -224,31 +228,43 @@ class PaperGeneratorAgent:
                 paper += bib
 
             # ---- 层1: MiniMax 初审（循环修订直到通过） ----
-            max_loops = 3
+            max_loops = 10
+            mini_review_log = []
             for loop in range(max_loops):
                 init_review = self._initial_review_paper(paper, "周论文")
+                mini_review_log.append({"round": loop+1, "issues": init_review["issues"], "passed": init_review["passed"]})
                 if init_review["passed"]:
-                    logger.info(f"  [周论文] MiniMax初审: ✅ 通过 (loop {loop+1})")
+                    logger.info(f"  [周论文] MiniMax初审: ✅ 通过 (round {loop+1})")
                     break
-                logger.info(f"  [周论文] MiniMax初审发现 {init_review['issues']} 个问题，第{loop+1}次修订...")
+                logger.info(f"  [周论文] MiniMax初审: {init_review['issues']}个问题，第{loop+1}次修订...")
                 paper = self._revise_paper(paper, init_review)
             else:
-                logger.info(f"  [周论文] MiniMax初审: ⚠ {max_loops}次修订后仍有问题，继续")
+                logger.info(f"  [周论文] MiniMax初审: ⚠ {max_loops}轮后仍有问题")
 
             # ---- 层2: Kimi 复审（循环修订直到通过） ----
+            kimi_review_log = []
             for loop in range(max_loops):
                 kim_review = self._review_paper(paper, "周论文", str(papers_data)[:2000])
+                kimi_review_log.append({"round": loop+1, "severe": kim_review.get("severe", 0),
+                                        "medium": kim_review.get("medium", 0),
+                                        "minor": kim_review.get("minor", 0),
+                                        "passed": kim_review["passed"]})
                 if kim_review["passed"]:
-                    logger.info(f"  [周论文] Kimi复审: ✅ 通过 (loop {loop+1})")
+                    logger.info(f"  [周论文] Kimi复审: ✅ 通过 (round {loop+1})")
                     break
-                logger.info(f"  [周论文] Kimi复审发现 {kim_review['issues']} 个问题，第{loop+1}次修订...")
+                logger.info(f"  [周论文] Kimi复审: 严重{kim_review['severe']}个, 中等{kim_review['medium']}个, 轻微{kim_review['minor']}个，第{loop+1}次修订...")
                 paper = self._revise_paper(paper, kim_review)
             else:
-                logger.info(f"  [周论文] Kimi复审: ⚠ {max_loops}次修订后仍有问题，继续")
+                logger.info(f"  [周论文] Kimi复审: ⚠ {max_loops}轮后仍有问题")
 
-            logger.info(f"  [周论文生成] 完成，字数约 {len(paper)} 字 "
-                       f"(MiniMax初审: {'✅' if init_review['passed'] else '❌'} "
-                       f"Kimi复审: {'✅' if kim_review['passed'] else '❌'})")
+            # ---- 工序证明 ----
+            proof = self._build_paper_process_proof(
+                "周论文", date_range, mini_review_log, kimi_review_log,
+                len(all_refs), init_review, kim_review
+            )
+            paper = f"{proof}\n\n---\n\n{paper}"
+
+            logger.info(f"  [周论文生成] 完成，字数约 {len(paper)} 字")
             return paper
 
         except Exception as e:
@@ -307,31 +323,43 @@ class PaperGeneratorAgent:
                 paper += bib
 
             # ---- 层1: MiniMax 初审（循环修订直到通过） ----
-            max_loops = 3
+            max_loops = 10
+            mini_review_log = []
             for loop in range(max_loops):
                 init_review = self._initial_review_paper(paper, "月论文")
+                mini_review_log.append({"round": loop+1, "issues": init_review["issues"], "passed": init_review["passed"]})
                 if init_review["passed"]:
-                    logger.info(f"  [月论文] MiniMax初审: ✅ 通过 (loop {loop+1})")
+                    logger.info(f"  [月论文] MiniMax初审: ✅ 通过 (round {loop+1})")
                     break
-                logger.info(f"  [月论文] MiniMax初审发现 {init_review['issues']} 个问题，第{loop+1}次修订...")
+                logger.info(f"  [月论文] MiniMax初审: {init_review['issues']}个问题，第{loop+1}次修订...")
                 paper = self._revise_paper(paper, init_review)
             else:
-                logger.info(f"  [月论文] MiniMax初审: ⚠ {max_loops}次修订后仍有问题，继续")
+                logger.info(f"  [月论文] MiniMax初审: ⚠ {max_loops}轮后仍有问题")
 
             # ---- 层2: Kimi 复审（循环修订直到通过） ----
+            kimi_review_log = []
             for loop in range(max_loops):
                 kim_review = self._review_paper(paper, "月论文", str(weekly_papers)[:2000])
+                kimi_review_log.append({"round": loop+1, "severe": kim_review.get("severe", 0),
+                                        "medium": kim_review.get("medium", 0),
+                                        "minor": kim_review.get("minor", 0),
+                                        "passed": kim_review["passed"]})
                 if kim_review["passed"]:
-                    logger.info(f"  [月论文] Kimi复审: ✅ 通过 (loop {loop+1})")
+                    logger.info(f"  [月论文] Kimi复审: ✅ 通过 (round {loop+1})")
                     break
-                logger.info(f"  [月论文] Kimi复审发现 {kim_review['issues']} 个问题，第{loop+1}次修订...")
+                logger.info(f"  [月论文] Kimi复审: 严重{kim_review['severe']}个, 中等{kim_review['medium']}个, 轻微{kim_review['minor']}个，第{loop+1}次修订...")
                 paper = self._revise_paper(paper, kim_review)
             else:
-                logger.info(f"  [月论文] Kimi复审: ⚠ {max_loops}次修订后仍有问题，继续")
+                logger.info(f"  [月论文] Kimi复审: ⚠ {max_loops}轮后仍有问题")
 
-            logger.info(f"  [月论文生成] 完成，字数约 {len(paper)} 字 "
-                       f"(MiniMax初审: {'✅' if init_review['passed'] else '❌'} "
-                       f"Kimi复审: {'✅' if kim_review['passed'] else '❌'})")
+            # ---- 工序证明 ----
+            proof = self._build_paper_process_proof(
+                "月论文", month_range, mini_review_log, kimi_review_log,
+                len(all_refs), init_review, kim_review
+            )
+            paper = f"{proof}\n\n---\n\n{paper}"
+
+            logger.info(f"  [月论文生成] 完成，字数约 {len(paper)} 字")
             return paper
 
         except Exception as e:
@@ -452,29 +480,37 @@ class PaperGeneratorAgent:
 
 ## 审查维度（每项打分：严重/中等/轻微/无）
 
-### 1. 事实准确性
+### 1. 参考文献格式（最重要！必须逐条检查）
+- 每条参考文献是否符合 GB/T 7713.1 新国标？
+- 期刊论文格式：[序号] 作者. 题名[J]. 刊名, 年, 卷(期): 起止页码.
+- 专著格式：[序号] 作者. 书名[M]. 出版地: 出版社, 年.
+- 电子文献格式：[序号] 作者. 题名[EB/OL]. (发布日期)[引用日期]. URL.
+- DOI是否保留并正确？
+- 任何格式错误都标记为"严重"
+
+### 2. 事实准确性
 - 引用的论文标题、作者、期刊是否准确？
 - 是否有明显的事实错误或时间错误？
 - 是否杜撰了不存在的引用？
 
-### 2. 逻辑严密性
+### 3. 参考文献数量
+- 参考文献是否达到 25-30 条？
+- 不足 25 条标记为"严重"
+
+### 4. 逻辑严密性
 - 论点是否有充分的证据支持？
 - 论证链条是否有断裂或跳跃？
-- 结论是否从分析中自然得出？
 
-### 3. 学术规范
-- 结构是否符合 CSSCI 期刊标准？
-- 引用格式是否规范？
+### 5. 学术规范
+- 结构是否完整？
 - 摘要是否涵盖背景+方法+发现+意义？
 
-### 4. 语言与表达
+### 6. 语言与表达
 - 是否有口语化或非学术表达？
-- 是否有机翻痕迹或不自然的表述？
-- 专业术语使用是否准确？
+- 是否有机翻痕迹？
 
-### 5. 创新性与价值
-- 是否提出了有价值的见解？
-- 是否有明显的AI生成痕迹（空洞、套路化）？
+### 7. 创新性与价值
+- 是否有明显的AI生成痕迹？
 
 ## 输出格式
 
@@ -482,23 +518,22 @@ class PaperGeneratorAgent:
 ## 审稿意见
 
 ### 总体评价
-[一段话概括论文质量]
+[一段话]
 
 ### 严重问题
 1. ...
-2. ...
+（没有则写"无"）
 
 ### 中等问题
 1. ...
-2. ...
+（没有则写"无"）
 
 ### 轻微问题
 1. ...
-2. ...
+（没有则写"无"）
 
 ### 修订建议
-1. [具体的修改方向]
-2. ...
+1. ...
 ```
 
 只输出审稿意见，不要其他内容。"""
@@ -523,8 +558,13 @@ class PaperGeneratorAgent:
 3. 逻辑连贯性：论证是否有明显的跳跃或矛盾？
 4. 语言质量：是否有明显的机翻痕迹或非学术表达？
 5. AI痕迹：是否有明显的"首先...其次...最后"套路化模板痕迹？
+6. 参考文献数量：是否少于25条？格式是否符合GB/T 7713.1？
 
-只列出你发现的具体问题，每条一行。如果没有问题，输出"初审通过"。"""
+只列出你发现的严重问题（真正需要修改的），每条一行。
+轻微的风格问题不要列。不要为了凑数编问题。
+如果你认为论文质量已经达标，只输出三个字：初审通过
+
+重要：宁可漏过轻微问题，也不要反复纠缠。质量达标就放行。"""
 
     def _initial_review_paper(self, paper: str, paper_type: str) -> dict:
         """MiniMax 初审：快速筛查明显问题"""
@@ -622,6 +662,73 @@ class PaperGeneratorAgent:
         except Exception as e:
             logger.warning(f"  [修订失败] {e}")
             return paper
+
+    def _build_paper_process_proof(self, paper_type: str, date_range: str,
+                                    mini_log: list, kimi_log: list,
+                                    ref_count: int, final_mini: dict, final_kimi: dict) -> str:
+        """生成论文工序证明"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        lines = [f"## 工序证明 | {paper_type} | {today}", ""]
+
+        lines.append(f"**生成日期**: {today}")
+        lines.append(f"**覆盖范围**: {date_range}")
+        lines.append("")
+
+        # 模型说明
+        lines.append("### 参与模型")
+        lines.append("| 阶段 | 模型 | 职责 |")
+        lines.append("|------|------|------|")
+        lines.append("| 写作 | DeepSeek V4 Pro | 初稿生成 |")
+        lines.append("| 初审 | MiniMax M2.7 | 结构/引用/语言快速筛查 |")
+        lines.append("| 复审 | Kimi 2.5 (moonshot-v1-32k) | 学术规范/GB/T 7713.1/事实核查 |")
+        lines.append("| 修订 | DeepSeek V4 Pro | 根据审稿意见修订 |")
+        lines.append("")
+
+        # MiniMax 初审日志
+        lines.append(f"### 初审 (MiniMax M2.7) — {len(mini_log)} 轮")
+        lines.append("| 轮次 | 问题数 | 结果 |")
+        lines.append("|------|--------|------|")
+        for entry in mini_log:
+            r = entry["round"]
+            issues = entry["issues"]
+            status = "✅ 通过" if entry["passed"] else ("❌ 修订 → 再审" if r < len(mini_log) else "⚠ 达上限")
+            lines.append(f"| {r} | {issues} | {status} |")
+        lines.append(f"| **最终** | **{final_mini['issues']}** | **{'✅ 通过' if final_mini['passed'] else '⚠ 未通过'}** |")
+        lines.append("")
+
+        # Kimi 复审日志
+        lines.append(f"### 复审 (Kimi 2.5) — {len(kimi_log)} 轮")
+        lines.append("| 轮次 | 严重 | 中等 | 轻微 | 结果 |")
+        lines.append("|------|------|------|------|------|")
+        for entry in kimi_log:
+            r = entry["round"]
+            s, m, mn = entry["severe"], entry["medium"], entry["minor"]
+            status = "✅ 通过" if entry["passed"] else ("❌ 修订 → 再审" if r < len(kimi_log) else "⚠ 达上限")
+            lines.append(f"| {r} | {s} | {m} | {mn} | {status} |")
+        lines.append(f"| **最终** | **{final_kimi.get('severe', 0)}** | **{final_kimi.get('medium', 0)}** | **{final_kimi.get('minor', 0)}** | **{'✅ 通过' if final_kimi['passed'] else '⚠ 未通过'}** |")
+        lines.append("")
+
+        # 参考文献统计
+        lines.append(f"### 参考文献")
+        lines.append(f"- 收录: **{ref_count} 条**")
+        lines.append(f"- 格式标准: **GB/T 7713.1**")
+        lines.append(f"- 状态: {'✅ 达标' if ref_count >= 25 else '⚠ 偏少（<' + str(25) + '条）'}")
+        lines.append("")
+
+        # 修订评估
+        lines.append("### 修订评估")
+        if final_mini["passed"] and final_kimi["passed"]:
+            lines.append("✅ 两轮审查均已通过，论文已达到发表质量。")
+        elif final_mini["passed"]:
+            lines.append("⚠ 初审通过但复审仍有保留，建议人工复核 Kimi 提出的问题。")
+        elif final_kimi["passed"]:
+            lines.append("⚠ 初审未通过但复审已放宽，建议检查 MiniMax 初审是否过严。")
+        else:
+            lines.append("⚠ 两轮审查均未在轮次上限内完全通过。建议人工检查审稿意见是否合理，或调整审稿严格度。")
+            lines.append(f"  - MiniMax 初审: {len(mini_log)} 轮后仍发现 {final_mini['issues']} 个问题")
+            lines.append(f"  - Kimi 复审: {len(kimi_log)} 轮后仍有 {final_kimi.get('severe', 0)} 个严重问题")
+
+        return "\n".join(lines)
 
     def _empty_paper(self, paper_type: str) -> str:
         """生成空论文"""

@@ -17,7 +17,7 @@ env:
 jobs:
   generate-monthly-paper:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
       - name: Checkout repository
