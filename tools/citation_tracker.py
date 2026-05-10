@@ -117,30 +117,42 @@ class CitationTracker:
         seen_titles = set()
 
         # 提取学术论文部分
-        # 格式: **论文标题** ... **来源**: arXiv (cs.AI), 2026
-        paper_pattern = r'\*\*([^*]+)\*\*\s*\n\s*\*\*作者\*\*:\s*([^\n]+)?\s*\n\s*\*\*来源\*\*:\s*([^\n]+)\s*\n\s*\*\*DOI\*\*:\s*([^\n]+)'
+        # 格式1: #### 论文标题  (h4)  + **作者**: ... **来源**: ... **DOI/PDF**: ...
+        # 格式2: **论文标题** (bold) + **作者**: ... **来源**: ... **DOI**: ...
+        paper_patterns = [
+            # h4 标题格式
+            r'####\s+([^\n]+)\s*\n(?:.*?\n)*?\s*\*\*作者\*\*:\s*([^\n]+)?\s*\n\s*\*\*来源\*\*:\s*([^\n]+)',
+            # bold 标题格式
+            r'\*\*([^*]+)\*\*\s*\n\s*\*\*作者\*\*:\s*([^\n]+)?\s*\n\s*\*\*来源\*\*:\s*([^\n]+)',
+        ]
 
-        for match in re.finditer(paper_pattern, markdown_text, re.MULTILINE):
-            title = match.group(1).strip()
-            authors = match.group(2).strip() if match.group(2) else ""
-            source = match.group(3).strip()
-            doi = match.group(4).strip()
+        for pattern in paper_patterns:
+            for match in re.finditer(pattern, markdown_text, re.MULTILINE):
+                title = match.group(1).strip()
+                authors = match.group(2).strip() if match.group(2) else ""
+                source = match.group(3).strip()
 
-            if title and title not in seen_titles:
-                refs.append({
-                    "type": "paper",
-                    "title": title,
-                    "authors": authors,
-                    "source": source,
-                    "url": f"https://doi.org/{doi}" if doi.startswith("10.") else doi,
-                    "doi": doi,
-                    "date": date
-                })
-                seen_titles.add(title)
+                # 提取 DOI（可选）
+                doi = ""
+                doi_match = re.search(r'\*\*DOI(?:/PDF)?\*\*:\s*([^\n]+)', markdown_text[match.start():match.end()+500])
+                if doi_match:
+                    doi = doi_match.group(1).strip()
+
+                if title and title not in seen_titles and not title.startswith('#'):
+                    refs.append({
+                        "type": "paper",
+                        "title": title,
+                        "authors": authors,
+                        "source": source,
+                        "url": f"https://doi.org/{doi}" if doi.startswith("10.") else doi,
+                        "doi": doi,
+                        "date": date
+                    })
+                    seen_titles.add(title)
 
         # 提取行业新闻部分
-        # 格式: **新闻标题** ... **来源**: X - xxx, 2026
-        news_pattern = r'\*\*([^*]+)\*\*\s*\n\s*\*\*来源\*\*:\s*([^\n]+)\s*\n\s*\*\*原文链接\*\*:\s*([^\n]+)'
+        # 格式: **新闻标题** (bold) + **来源**: ... **原文链接**: ...
+        news_pattern = r'\*\*([^*]+)\*\*[^\n]*\n\s*\*\*来源\*\*:\s*([^\n]+)\s*\n\s*\*\*原文链接\*\*:\s*([^\n]+)'
 
         for match in re.finditer(news_pattern, markdown_text, re.MULTILINE):
             title = match.group(1).strip()

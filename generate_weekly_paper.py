@@ -46,6 +46,8 @@ def collect_weekly_reports(vault_path: str, days: int = 7) -> list[dict]:
 
     logger.info(f"收集 {start_date.strftime('%Y-%m-%d')} 至 {end_date.strftime('%Y-%m-%d')} 的日报")
 
+    tracker = CitationTracker()
+
     # 遍历日期文件夹
     for i in range(days):
         date = start_date + timedelta(days=i)
@@ -65,20 +67,24 @@ def collect_weekly_reports(vault_path: str, days: int = 7) -> list[dict]:
         with open(report_file, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # 解析日报
+        # 从 Markdown 中提取参考文献
+        extracted_refs = tracker.extract_from_markdown(content, date_str)
+
+        # 解析日报结构
+        parsed = parse_daily_report(content)
+
+        # 组装报告数据
         report = {
             "date": date_str,
             "content": content,
-            "academic_papers": [],
-            "industry_news": [],
-            "executive_summary": "",
-            "strategic_enhancements": {}
+            "academic_papers": [r for r in extracted_refs if r.get("type") == "paper"],
+            "industry_news": [r for r in extracted_refs if r.get("type") == "news"],
+            "executive_summary": parsed.get("executive_summary", ""),
+            "strategic_enhancements": parsed.get("strategic_enhancements", {}),
         }
 
-        # 简单解析（完整解析需要更复杂的逻辑）
-        # 这里可以调用专门的日报解析器
         reports.append(report)
-        logger.info(f"  已收集: {date_str}")
+        logger.info(f"  已收集: {date_str} ({len(report['academic_papers'])} papers, {len(report['industry_news'])} news)")
 
     return reports
 
