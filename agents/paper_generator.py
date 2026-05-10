@@ -223,17 +223,28 @@ class PaperGeneratorAgent:
                 bib = self.citation_tracker.format_bibliography(all_refs)
                 paper += bib
 
-            # ---- 层1: MiniMax 初审 ----
-            init_review = self._initial_review_paper(paper, "周论文")
-            if not init_review["passed"]:
-                logger.info(f"  [周论文] MiniMax初审发现 {init_review['issues']} 个问题，第1次修订...")
+            # ---- 层1: MiniMax 初审（循环修订直到通过） ----
+            max_loops = 3
+            for loop in range(max_loops):
+                init_review = self._initial_review_paper(paper, "周论文")
+                if init_review["passed"]:
+                    logger.info(f"  [周论文] MiniMax初审: ✅ 通过 (loop {loop+1})")
+                    break
+                logger.info(f"  [周论文] MiniMax初审发现 {init_review['issues']} 个问题，第{loop+1}次修订...")
                 paper = self._revise_paper(paper, init_review)
+            else:
+                logger.info(f"  [周论文] MiniMax初审: ⚠ {max_loops}次修订后仍有问题，继续")
 
-            # ---- 层2: Kimi 复审 ----
-            kim_review = self._review_paper(paper, "周论文", str(papers_data)[:2000])
-            if not kim_review["passed"]:
-                logger.info(f"  [周论文] Kimi复审发现 {kim_review['issues']} 个问题，第2次修订...")
+            # ---- 层2: Kimi 复审（循环修订直到通过） ----
+            for loop in range(max_loops):
+                kim_review = self._review_paper(paper, "周论文", str(papers_data)[:2000])
+                if kim_review["passed"]:
+                    logger.info(f"  [周论文] Kimi复审: ✅ 通过 (loop {loop+1})")
+                    break
+                logger.info(f"  [周论文] Kimi复审发现 {kim_review['issues']} 个问题，第{loop+1}次修订...")
                 paper = self._revise_paper(paper, kim_review)
+            else:
+                logger.info(f"  [周论文] Kimi复审: ⚠ {max_loops}次修订后仍有问题，继续")
 
             logger.info(f"  [周论文生成] 完成，字数约 {len(paper)} 字 "
                        f"(MiniMax初审: {'✅' if init_review['passed'] else '❌'} "
@@ -295,17 +306,28 @@ class PaperGeneratorAgent:
                 bib = self.citation_tracker.format_bibliography(all_refs)
                 paper += bib
 
-            # ---- 层1: MiniMax 初审 ----
-            init_review = self._initial_review_paper(paper, "月论文")
-            if not init_review["passed"]:
-                logger.info(f"  [月论文] MiniMax初审发现 {init_review['issues']} 个问题，第1次修订...")
+            # ---- 层1: MiniMax 初审（循环修订直到通过） ----
+            max_loops = 3
+            for loop in range(max_loops):
+                init_review = self._initial_review_paper(paper, "月论文")
+                if init_review["passed"]:
+                    logger.info(f"  [月论文] MiniMax初审: ✅ 通过 (loop {loop+1})")
+                    break
+                logger.info(f"  [月论文] MiniMax初审发现 {init_review['issues']} 个问题，第{loop+1}次修订...")
                 paper = self._revise_paper(paper, init_review)
+            else:
+                logger.info(f"  [月论文] MiniMax初审: ⚠ {max_loops}次修订后仍有问题，继续")
 
-            # ---- 层2: Kimi 复审 ----
-            kim_review = self._review_paper(paper, "月论文", str(weekly_papers)[:2000])
-            if not kim_review["passed"]:
-                logger.info(f"  [月论文] Kimi复审发现 {kim_review['issues']} 个问题，第2次修订...")
+            # ---- 层2: Kimi 复审（循环修订直到通过） ----
+            for loop in range(max_loops):
+                kim_review = self._review_paper(paper, "月论文", str(weekly_papers)[:2000])
+                if kim_review["passed"]:
+                    logger.info(f"  [月论文] Kimi复审: ✅ 通过 (loop {loop+1})")
+                    break
+                logger.info(f"  [月论文] Kimi复审发现 {kim_review['issues']} 个问题，第{loop+1}次修订...")
                 paper = self._revise_paper(paper, kim_review)
+            else:
+                logger.info(f"  [月论文] Kimi复审: ⚠ {max_loops}次修订后仍有问题，继续")
 
             logger.info(f"  [月论文生成] 完成，字数约 {len(paper)} 字 "
                        f"(MiniMax初审: {'✅' if init_review['passed'] else '❌'} "
