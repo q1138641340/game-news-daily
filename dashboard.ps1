@@ -112,8 +112,8 @@ $sleepOk = $false; $content = ''
 if (Test-Path $trb) {
     Write-Host '  task-run.bat: EXISTS'
     $content = Get-Content $trb -Raw
-    if ($content -match 'SetSuspendState') { Write-Host '  Auto-sleep:   ENABLED' -ForegroundColor Green; $sleepOk = $true }
-    else { Write-Host '  Auto-sleep:   MISSING' -ForegroundColor Red }
+    if ($content -match 'SetSuspendState') { Write-Host '  Auto-sleep:   ENABLED (RISK: forces S4)' -ForegroundColor Red; $sleepOk = $false }
+    else { Write-Host '  Auto-sleep:   OFF (safe)' -ForegroundColor Green; $sleepOk = $true }
     if ($content -match 'git pull origin') { Write-Host '  Pre-pull:     ENABLED' -ForegroundColor Green }
     else { Write-Host '  Pre-pull:     MISSING' -ForegroundColor Yellow }
     if ($content -match 'Chrome') { Write-Host '  Chrome start: ENABLED' -ForegroundColor Green }
@@ -128,7 +128,7 @@ $t = Get-ScheduledTask -TaskName 'DailyNewsOpenCLI' -ErrorAction SilentlyContinu
 $stat = if ($t -and $t.State -eq 'Ready') { 'TASK=READY' } else { 'TASK=MISSING' }
 $wake = if ($t -and $t.Settings.WakeToRun) { 'WAKE=ON' } else { 'WAKE=OFF' }
 $pend = if (Test-Path $pendingFile) { 'PENDING=YES' } else { 'PENDING=NO' }
-$sleep = if ($sleepOk) { 'SLEEP=ON' } else { 'SLEEP=OFF' }
+$sleep = if ($sleepOk) { 'SLEEP=OFF' } else { 'SLEEP=ON' }
 $pull = if ($content -match 'git pull origin') { 'PULL=ON' } else { 'PULL=OFF' }
 Write-Host ('  ' + $stat + ' | ' + $wake + ' | ' + $pend + ' | ' + $sleep + ' | ' + $pull) -ForegroundColor Green
 Write-Host '====================================================' -ForegroundColor Cyan
