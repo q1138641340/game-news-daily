@@ -114,7 +114,7 @@ if (Test-Path $trb) {
     $content = Get-Content $trb -Raw
     if ($content -match 'SetSuspendState') { Write-Host '  Auto-sleep:   ENABLED (RISK: forces S4)' -ForegroundColor Red; $sleepOk = $false }
     else { Write-Host '  Auto-sleep:   OFF (safe)' -ForegroundColor Green; $sleepOk = $true }
-    if ($content -match 'git pull origin') { Write-Host '  Pre-pull:     ENABLED' -ForegroundColor Green }
+    if ($content -match 'git(?:.exe)?.+pull|git.+fetch') { Write-Host '  Pre-pull:     ENABLED' -ForegroundColor Green }
     else { Write-Host '  Pre-pull:     MISSING' -ForegroundColor Yellow }
     if ($content -match 'Chrome') { Write-Host '  Chrome start: ENABLED' -ForegroundColor Green }
 } else {
