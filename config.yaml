@@ -148,6 +148,38 @@ xiaohongshu_keywords:
   - "ChinaJoy"
   - "游戏行业动态"
 
+# 来源可信度分级
+source_trust:
+  high:
+    - arxiv
+    - acm
+    - ieee
+    - nature
+    - crossref
+    - dblp
+    - semanticscholar
+  medium:
+    - techcrunch
+    - verge
+    - wired
+    - gamesindustry
+    - gdc
+    - gamedeveloper
+    - eurogamer
+    - polygon
+    - kotaku
+    - ign
+    - pcgamer
+    - mit-technology-review
+    - arstechnica
+  low:
+    - xiaohongshu
+    - reddit
+    - twitter
+    - nitter
+    - weibo
+    - hacker-news
+
 # OpenCLI 配置
 opencli:
   enabled: true

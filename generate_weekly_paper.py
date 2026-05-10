@@ -245,9 +245,36 @@ def main():
 
     logger.info(f"已收集 {len(reports)} 天的日报")
 
+    # ---- 引用验证 ----
+    logger.info("=== 引用验证 ===")
+    from tools.citation_verifier import verify_batch
+    import yaml
+    config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
+    with open(config_path, encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+
+    all_refs = []
+    for report in reports:
+        all_refs.extend(report.get("academic_papers", []))
+        all_refs.extend(report.get("industry_news", []))
+    if all_refs:
+        logger.info(f"  验证 {len(all_refs)} 条引用...")
+        all_refs = verify_batch(all_refs)
+        # 回写验证结果到 reports
+        verified_count = sum(1 for r in all_refs if r.get("verified"))
+        logger.info(f"  验证通过: {verified_count}/{len(all_refs)}")
+
+    # ---- 生成 Research Cards ----
+    logger.info("=== 生成 Research Cards ===")
+    from tools.research_card import cards_from_reports, format_cards_for_writing
+    cards = cards_from_reports(reports, config)
+    writable = [c for c in cards if c.is_writable]
+    logger.info(f"  可写卡片: {len(writable)}/{len(cards)}")
+    cards_text = format_cards_for_writing(cards)
+
     # 生成论文
     generator = PaperGeneratorAgent()
-    paper = generator.generate_weekly(reports)
+    paper = generator.generate_weekly(reports, cards_text=cards_text)
 
     # 保存
     date_range = f"{reports[0]['date']} 至 {reports[-1]['date']}"

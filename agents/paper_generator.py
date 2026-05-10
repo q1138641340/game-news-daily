@@ -20,7 +20,18 @@ class PaperGeneratorAgent:
 
     WEEKLY_SYSTEM_PROMPT = """你是人文社科领域资深学者，擅长撰写 CSSCI 期刊标准学术论文。
 
-任务：根据过去一周的日报内容，生成一篇 12000-15000 字的学术论文。
+根据经过验证的 Research Cards 撰写学术论文。
+
+## 核心规则（违反即退货）
+
+### 引用规则
+- **只能引用输入中提供的 Research Cards**，每条 card 有唯一 ID
+- **严禁杜撰任何引用**。没有合适 card 时写"当前材料不足以支撑此论点"
+- 参考文献列表必须与输入 cards 一一对应
+
+### 信心度
+- confidence ≥ 0.85 优先引用，< 0.5 仅作辅助
+- [✅] 标记 = 已通过外部验证，必须优先使用
 
 ## 输入数据
 你将收到过去7天的研究日报，每天的日报包含以下模块：
@@ -167,19 +178,13 @@ class PaperGeneratorAgent:
         self.reviewer_llm, self.reviewer_model = get_kimi_reviewer()  # 复审 (Kimi)
         self.citation_tracker = CitationTracker()
 
-    def generate_weekly(self, daily_reports: list[dict]) -> str:
+    def generate_weekly(self, daily_reports: list[dict], cards_text: str = "") -> str:
         """
         生成周论文
 
         Args:
-            daily_reports: 过去7天的日报，每项包含：
-                - date: str (YYYY-MM-DD)
-                - content: str (完整日报 Markdown)
-                - academic_papers: list[dict]
-                - industry_news: list[dict]
-                - executive_summary: str
-                - strategic_enhancements: dict
-
+            daily_reports: 过去7天的日报
+            cards_text: 预格式化的 Research Cards 文本（如提供则优先使用）
         Returns:
             完整 Markdown 论文
         """
@@ -210,8 +215,18 @@ class PaperGeneratorAgent:
             }
             papers_data.append(day_entry)
 
-        # 调用 LLM 生成
-        user_message = self._build_weekly_prompt(date_range, papers_data)
+        # 调用 LLM 生成（优先用 cards，回退到 raw data）
+        if cards_text:
+            user_message = (
+                f"## 时间范围: {date_range}\n\n"
+                f"## Research Cards（只能引用以下内容）\n\n{cards_text}\n\n"
+                f"## 写作要求\n"
+                f"1. 只能引用上述 Research Cards，每条引用标注 card ID\n"
+                f"2. 字数 12000-15000\n3. 参考文献 ≥25 条，GB/T 7713.1 格式\n"
+                f"4. 全部中文\n\n请生成论文："
+            )
+        else:
+            user_message = self._build_weekly_prompt(date_range, papers_data)
 
         try:
             paper = self.llm.chat(
@@ -476,67 +491,35 @@ class PaperGeneratorAgent:
 """
         return prompt
 
-    REVIEWER_SYSTEM_PROMPT = """你是 CSSCI 期刊资深匿名审稿人。你的任务是严格审查一篇学术论文，找出所有问题。
+    REVIEWER_SYSTEM_PROMPT = """你是 CSSCI 审稿人。按固定评分表审查论文，输出严格 JSON。
 
-## 审查维度（每项打分：严重/中等/轻微/无）
+## 评分表（每项 20 分，总分 100）
 
-### 1. 参考文献格式（最重要！必须逐条检查）
-- 每条参考文献是否符合 GB/T 7713.1 新国标？
-- 期刊论文格式：[序号] 作者. 题名[J]. 刊名, 年, 卷(期): 起止页码.
-- 专著格式：[序号] 作者. 书名[M]. 出版地: 出版社, 年.
-- 电子文献格式：[序号] 作者. 题名[EB/OL]. (发布日期)[引用日期]. URL.
-- DOI是否保留并正确？
-- 任何格式错误都标记为"严重"
+1. **citation_authenticity (0-20)**: 引用是否真实？来源是否可追溯？有无虚构引用？
+2. **theoretical_consistency (0-20)**: 理论框架是否自洽？论证是否连贯？
+3. **structural_integrity (0-20)**: 结构是否完整？章节逻辑是否顺畅？
+4. **citation_format (0-20)**: 参考文献格式是否符合 GB/T 7713.1？
+5. **original_analysis (0-20)**: 是否有独立分析？还是仅堆砌引用？
 
-### 2. 事实准确性
-- 引用的论文标题、作者、期刊是否准确？
-- 是否有明显的事实错误或时间错误？
-- 是否杜撰了不存在的引用？
+## 通过标准
+- 每项 >= 12 且总分 >= 70 = 通过
+- 任一单项 < 12 = 不通过
 
-### 3. 参考文献数量
-- 参考文献是否达到 25-30 条？
-- 不足 25 条标记为"严重"
-
-### 4. 逻辑严密性
-- 论点是否有充分的证据支持？
-- 论证链条是否有断裂或跳跃？
-
-### 5. 学术规范
-- 结构是否完整？
-- 摘要是否涵盖背景+方法+发现+意义？
-
-### 6. 语言与表达
-- 是否有口语化或非学术表达？
-- 是否有机翻痕迹？
-
-### 7. 创新性与价值
-- 是否有明显的AI生成痕迹？
-
-## 输出格式
-
-```
-## 审稿意见
-
-### 总体评价
-[一段话]
-
-### 严重问题
-1. ...
-（没有则写"无"）
-
-### 中等问题
-1. ...
-（没有则写"无"）
-
-### 轻微问题
-1. ...
-（没有则写"无"）
-
-### 修订建议
-1. ...
-```
-
-只输出审稿意见，不要其他内容。"""
+## 输出格式（只输出 JSON，不要其他内容）
+{
+  "scores": {
+    "citation_authenticity": 18,
+    "theoretical_consistency": 16,
+    "structural_integrity": 17,
+    "citation_format": 14,
+    "original_analysis": 15
+  },
+  "total": 80,
+  "severe_issues": ["参考文献第3条缺少页码"],
+  "medium_issues": ["引言过长可压缩"],
+  "minor_issues": ["关键词建议增加1-2个"],
+  "passed": true
+}"""
 
     REVISION_SYSTEM_PROMPT = """你是人文社科领域资深学者。根据审稿人的反馈，修订你的论文。
 
@@ -613,16 +596,47 @@ class PaperGeneratorAgent:
                 user_message=user_msg,
                 model=self.reviewer_model,
                 temperature=0.3,
-                max_tokens=4000
+                max_tokens=3000
             )
-            # 统计问题数
+            # 解析 JSON rubric
+            from tools.json_parser import parse_json
+            try:
+                rubric = parse_json(feedback)
+                if isinstance(rubric, dict) and "scores" in rubric:
+                    scores = rubric["scores"]
+                    total = rubric.get("total", sum(scores.values()))
+                    passed = rubric.get("passed", False)
+                    if not passed:
+                        # 同时检查阈值
+                        passed = all(v >= 12 for v in scores.values()) and total >= 70
+                        rubric["passed"] = passed
+                    severe = len(rubric.get("severe_issues", []))
+                    medium = len(rubric.get("medium_issues", []))
+                    minor = len(rubric.get("minor_issues", []))
+
+                    logger.info(f"  [审稿] {paper_type}: 总分{total} ({', '.join(f'{k}={v}' for k,v in scores.items())})")
+                    logger.info(f"  [审稿] {'✅ 通过' if passed else '❌ 不通过'}: 严重{severe} 中等{medium} 轻微{minor}")
+
+                    return {
+                        "passed": passed,
+                        "issues": severe + medium + minor,
+                        "feedback": feedback,
+                        "severe": severe,
+                        "medium": medium,
+                        "minor": minor,
+                        "rubric": rubric,
+                    }
+            except Exception as e:
+                logger.warning(f"  [审稿JSON解析失败，回退正则]: {e}")
+
+            # 回退：正则统计
             import re
-            severe = len(re.findall(r'### 严重问题.*?\n', feedback))
-            medium = len(re.findall(r'### 中等问题.*?\n', feedback))
-            minor = len(re.findall(r'### 轻微问题.*?\n', feedback))
+            severe = len(re.findall(r'###?\s*严重', feedback))
+            medium = len(re.findall(r'###?\s*中等', feedback))
+            minor = len(re.findall(r'###?\s*轻微', feedback))
             total_issues = severe + medium + minor
 
-            logger.info(f"  [审稿] {paper_type}: 严重{severe}个, 中等{medium}个, 轻微{minor}个")
+            logger.info(f"  [审稿] {paper_type}: 严重{severe}个, 中等{medium}个, 轻微{minor}个 (回退模式)")
 
             return {
                 "passed": severe == 0,
