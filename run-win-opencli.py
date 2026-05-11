@@ -26,12 +26,13 @@ def main():
         logger.info("OpenCLI 已禁用，退出")
         return
 
-    runner = OpenCLIRunner(timeout=opencli_cfg.get("timeout_seconds", 90))
+    runner = OpenCLIRunner(timeout=opencli_cfg.get("timeout_seconds", 180))
     if not runner.is_available():
-        logger.warning("OpenCLI 不可用，退出")
-        return
+        logger.error("OpenCLI 不可用（Chrome/扩展未就绪），退出")
+        sys.exit(2)
 
     items = []
+    total_errors = 0
 
     # ---- 万方 ----
     for kw in config.get("academic_keywords", {}).get("wanfang", []):
@@ -42,6 +43,7 @@ def main():
             time.sleep(10)
         except Exception as e:
             logger.warning(f"  [万方失败] '{kw}': {e}")
+            total_errors += 1
 
     # ---- 百度学术 ----
     for kw in config.get("academic_keywords", {}).get("baidu_scholar", []):
@@ -52,6 +54,7 @@ def main():
             time.sleep(8)
         except Exception as e:
             logger.warning(f"  [百度学术失败] '{kw}': {e}")
+            total_errors += 1
 
     # ---- 小红书 ----
     for kw in config.get("xiaohongshu_keywords", []):
@@ -62,6 +65,17 @@ def main():
             time.sleep(8)
         except Exception as e:
             logger.warning(f"  [小红书失败] '{kw}': {e}")
+            total_errors += 1
+
+    # All sources failed → exit 3 (distinct from "nothing found")
+    total_keywords = (
+        len(config.get("academic_keywords", {}).get("wanfang", [])) +
+        len(config.get("academic_keywords", {}).get("baidu_scholar", [])) +
+        len(config.get("xiaohongshu_keywords", []))
+    )
+    if total_keywords > 0 and total_errors >= total_keywords:
+        logger.error(f"所有 {total_keywords} 个源均采集失败，退出")
+        sys.exit(3)
 
     if not items:
         logger.info("无 OpenCLI 新内容")
