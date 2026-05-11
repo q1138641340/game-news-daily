@@ -6,6 +6,7 @@ OpenCLI Runner — 统一封装 OpenCLI 子进程调用
 import subprocess
 import json
 import logging
+import re
 import shutil
 import platform
 from typing import Optional
@@ -194,6 +195,11 @@ class OpenCLIRunner:
 
             authors = (entry.get("authors") or entry.get("author") or "").strip()
             url = (entry.get("url") or "").strip()
+
+            # Fix Wanfang URL format: OpenCLI returns periodical_/thesis_/conference_
+            # with underscores, but Wanfang requires forward slashes
+            if "wanfangdata.com.cn" in url:
+                url = re.sub(r'/(periodical|thesis|conference)_', r'/\1/', url)
 
             # 学术来源 → paper 格式
             if source in ("万方", "百度学术", "知网"):
