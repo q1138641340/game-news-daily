@@ -3,7 +3,7 @@ setlocal EnableExtensions
 
 REM === Mutex ===
 if exist C:\Users\q1138\game-news-daily\.task-lock (
-    echo ABORT >> output\task-error.log
+    echo [%date% %time%] ABORT: previous run still active >> output\task-error.log
     exit /b 0
 )
 echo RUNNING > C:\Users\q1138\game-news-daily\.task-lock
@@ -24,12 +24,12 @@ mkdir output 2>nul
 REM === Step 1: git pull ===
 E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily pull origin main --rebase > output\git-pull.log 2>&1
 if errorlevel 1 (
-    echo git pull FAILED >> output\task-error.log
+    echo [%date% %time%] git pull FAILED >> output\task-error.log
     type output\git-pull.log >> output\task-error.log 2>nul
     del C:\Users\q1138\game-news-daily\.task-lock 2>nul
     exit /b 1
 )
-echo git pull OK >> output\task-error.log
+echo [%date% %time%] git pull OK >> output\task-error.log
 
 REM === Step 2: Chrome ===
 tasklist /fi "ImageName eq chrome.exe" 2>nul | find /i "chrome.exe" >nul
@@ -42,22 +42,33 @@ if errorlevel 1 (
 
 REM === Step 3: Collection ===
 C:\Users\q1138\AppData\Local\Programs\Python\Python311\python.exe C:\Users\q1138\game-news-daily\run-win-opencli.py >> output\win-opencli.log 2>&1
-if errorlevel 1 (
-    echo Collection FAILED >> output\task-error.log
+set EXITCODE=%ERRORLEVEL%
+if %EXITCODE% equ 2 (
+    echo [%date% %time%] Collection SKIPPED: OpenCLI/Chrome unavailable >> output\task-error.log
     del C:\Users\q1138\game-news-daily\.task-lock 2>nul
     exit /b 1
 )
-echo Collection OK >> output\task-error.log
+if %EXITCODE% equ 3 (
+    echo [%date% %time%] Collection FAILED: all sources errored >> output\task-error.log
+    del C:\Users\q1138\game-news-daily\.task-lock 2>nul
+    exit /b 1
+)
+if %EXITCODE% neq 0 (
+    echo [%date% %time%] Collection FAILED, exit %EXITCODE% >> output\task-error.log
+    del C:\Users\q1138\game-news-daily\.task-lock 2>nul
+    exit /b 1
+)
+echo [%date% %time%] Collection OK >> output\task-error.log
 
 REM === Step 4: git push ===
 if exist C:\Users\q1138\game-news-daily\output\.cache\opencli-pending.json (
     E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily add output/.cache/opencli-pending.json output/.cache/seen_items.json
-    E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily commit -m "sync: Win OpenCLI" >> output\git-pull.log 2>&1
+    E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily commit -m "sync: Win OpenCLI %date%" >> output\git-pull.log 2>&1
     E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily push origin main >> output\git-pull.log 2>&1
     if errorlevel 1 (
-        echo git push FAILED >> output\task-error.log
+        echo [%date% %time%] git push FAILED >> output\task-error.log
     ) else (
-        echo git push OK >> output\task-error.log
+        echo [%date% %time%] git push OK >> output\task-error.log
     )
 )
 
