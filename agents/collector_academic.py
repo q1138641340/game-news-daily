@@ -58,7 +58,8 @@ class AcademicCollectorAgent:
         self.ds_client, self.ds_model = get_collect_deepseek_flash()
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'GameResearchBot/1.0 (academic research)'
+            'User-Agent': 'GameResearchBot/1.0 (academic research)',
+            'x-api-key': os.getenv('SEMANTIC_SCHOLAR_API_KEY', '')
         })
 
     def run(self) -> list[dict]:

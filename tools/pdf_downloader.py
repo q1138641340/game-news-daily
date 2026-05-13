@@ -109,9 +109,15 @@ class PDFDownloader:
             保存的文件路径
         """
         try:
+            import os
+            from dotenv import load_dotenv
+            load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+            api_key = os.getenv('SEMANTIC_SCHOLAR_API_KEY', '')
+
             api_url = f"https://api.semanticscholar.org/graph/v1/paper/{paper_id}"
             params = {"fields": "openAccessPdf,title"}
-            resp = requests.get(api_url, params=params, timeout=15)
+            headers = {'x-api-key': api_key} if api_key else {}
+            resp = requests.get(api_url, params=params, headers=headers, timeout=15)
             resp.raise_for_status()
             data = resp.json()
 
