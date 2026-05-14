@@ -3,6 +3,7 @@
 负责 arXiv、Semantic Scholar、CrossRef 等学术源
 """
 
+import os
 import requests
 from datetime import datetime, timedelta, timezone
 from typing import Optional
