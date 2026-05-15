@@ -4,7 +4,7 @@ setlocal EnableExtensions
 REM === Mutex ===
 if exist C:\Users\q1138\game-news-daily\.task-lock (
     echo [%date% %time%] ABORT: previous run still active >> output\task-error.log
-    exit /b 0
+    exit /b 1
 )
 echo RUNNING > C:\Users\q1138\game-news-daily\.task-lock
 
@@ -22,7 +22,7 @@ cd /d C:\Users\q1138\game-news-daily
 mkdir output 2>nul
 
 REM === Step 1: git pull ===
-E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily pull origin main --rebase > output\git-pull.log 2>&1
+E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily pull origin main > output\git-pull.log 2>&1
 if errorlevel 1 (
     echo [%date% %time%] git pull FAILED >> output\task-error.log
     type output\git-pull.log >> output\task-error.log 2>nul
@@ -61,9 +61,10 @@ if %EXITCODE% neq 0 (
 echo [%date% %time%] Collection OK >> output\task-error.log
 
 REM === Step 4: git push ===
+for /f "tokens=1-3 delims=/ " %%a in ('powershell Get-Date -Format "yyyy-MM-dd"') do set GIT_DATE=%%a-%%b-%%c
 if exist C:\Users\q1138\game-news-daily\output\.cache\opencli-pending.json (
     E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily add output/.cache/opencli-pending.json output/.cache/seen_items.json
-    E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily commit -m "sync: Win OpenCLI %date%" >> output\git-pull.log 2>&1
+    E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily commit -m "sync: Win OpenCLI %GIT_DATE%" >> output\git-pull.log 2>&1
     E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily push origin main >> output\git-pull.log 2>&1
     if errorlevel 1 (
         echo [%date% %time%] git push FAILED >> output\task-error.log
@@ -74,3 +75,4 @@ if exist C:\Users\q1138\game-news-daily\output\.cache\opencli-pending.json (
 
 del C:\Users\q1138\game-news-daily\.task-lock 2>nul
 endlocal
+exit /b 0

@@ -79,7 +79,7 @@ class OpenCLIRunner:
                     import time
                     time.sleep(3)
                     result2 = self._run_cmd(["doctor"])
-                    if "Extension: connected" in result2.stdout:
+                    if "Extension: connected" in result2.stdout and result2.returncode == 0:
                         self._available = True
                         logger.info("  [OpenCLI] daemon 重启后可用")
                     else:
@@ -87,7 +87,7 @@ class OpenCLIRunner:
                         if self._launch_chrome():
                             time.sleep(5)
                             result3 = self._run_cmd(["doctor"])
-                            if "Extension: connected" in result3.stdout:
+                            if "Extension: connected" in result3.stdout and result3.returncode == 0:
                                 self._available = True
                                 logger.info("  [OpenCLI] Chrome 启动后可用")
                             else:
@@ -123,7 +123,11 @@ class OpenCLIRunner:
         import platform
         try:
             if platform.system() == "Windows":
-                subprocess.Popen(["start", "chrome"], shell=True)
+                subprocess.Popen([
+                    "start", "chrome",
+                    "--disable-gpu", "--no-first-run", "--no-default-browser-check",
+                    '--profile-directory="Default"'
+                ], shell=True)
             else:
                 subprocess.Popen([
                     "open", "-a", "Google Chrome",
