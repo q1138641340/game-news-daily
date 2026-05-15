@@ -8,8 +8,8 @@ set HOME=C:\Users\q1138
 set GIT_CONFIG_NOSYSTEM=1
 set GIT_SSH_COMMAND=ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30
 
-REM === git pull ===
-E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily pull origin main --rebase > output\git-pull.log 2>&1
+REM === git pull (no rebase, output/ is in .gitignore so no conflict) ===
+E:\Git\cmd\git.exe -C C:\Users\q1138\game-news-daily pull origin main > output\git-pull.log 2>&1
 if errorlevel 1 (
     echo [%date% %time%] git pull FAILED >> output\test-boot.log
     type output\git-pull.log >> output\test-boot.log 2>nul
