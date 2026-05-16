@@ -465,7 +465,7 @@ workflow:
 
   review:
     min_quality_score: 0.5
-    min_relevance_score: 0.3
+    min_relevance_score: 0.5
     # 图形学/理工类论文配额
     max_cs_graphics_per_batch: 3
 

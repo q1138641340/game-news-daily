@@ -76,11 +76,11 @@ class RelevanceReviewerAgent:
 
 ### 通过原则
 - 第一优先级内容：默认 >= 0.6
-- 第二优先级内容：根据具体关联度给 0.4-0.7
-- 图形学论文：最多通过 4 篇/批次，超出标记 approved=false
-- **与游戏、数字媒体、交互、AI、叙事有任何关系的论文 → >= 0.3**
-- **arXiv 论文如果涉及 AI、交互、VR、叙事 → 默认 >= 0.5**
-- **CrossRef 中与媒体、文化、数字人文相关 → 默认 >= 0.5**
+- 第二优先级内容：根据具体关联度给 0.5-0.6
+- 图形学论文：最多通过 3 篇/批次，超出标记 approved=false
+- **明确涉及游戏研究、交互式叙事、数字媒介作为核心研究对象的论文 → >= 0.5**
+- **arXiv 论文如果明确涉及游戏/交互叙事/数字媒介作为研究对象 → >= 0.6**
+- **扩散模型/AI视频生成：仅在明确应用于游戏叙事/交互式内容生成时才给高分（>=0.5），纯视频生成技术论文 → <= 0.3**
 
 ### 不通过原则
 - **"网络外部性下的最优授权策略"类经济学论文 → 不通过**
@@ -99,7 +99,7 @@ class RelevanceReviewerAgent:
 - title: string
 - relevance_score: float（0.0-1.0）
 - priority: string（"high", "medium", "low"）
-- approved: boolean（分数 >= 0.3 且不属于排除领域才为 true）
+- approved: boolean（分数 >= 0.5 且不属于排除领域才为 true）
 - interest_areas: array of strings（关联的具体研究领域）
 - reason: string（评分理由，必须说明为什么相关或不相关）
 - needs_verification: boolean
