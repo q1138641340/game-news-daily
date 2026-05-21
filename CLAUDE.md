@@ -33,8 +33,8 @@ GitHub (q1138641340/game-news-daily) ← 中转站
 Phase 0: 跨天去重 (DedupCache, 90天)
 Phase 1: 信息收集 (NewsCollector + AcademicCollector, MiniMax M2.7 清洗)
 Phase 2: 预处理 (Preprocessor, DeepSeek Flash)
-Phase 3: 质量审查 (QualityReviewer, Kimi 2.5 + 幻觉检测)
-Phase 4: 相关性审查 (RelevanceReviewer, Kimi 2.5)
+Phase 3: 质量审查 (QualityReviewer, MiniMax M2.7 + 幻觉检测)
+Phase 4: 相关性审查 (RelevanceReviewer, MiniMax M2.7)
 Phase 5: 格式化输出 (Formatter, DeepSeek V4 Pro + 工序证明)
 Phase 6: 保存 + 标记去重缓存
 ```
@@ -58,8 +58,8 @@ Phase 6: 保存 + 标记去重缓存
 
 - 收集/清洗: MiniMax M2.7-highspeed (快速便宜)
 - 预处理: DeepSeek Flash (备用)
-- 质量审查: Kimi 2.5 / moonshot-v1-32k
-- 相关性审查: Kimi 2.5
+- 质量审查: MiniMax M2.7-highspeed
+- 相关性审查: MiniMax M2.7-highspeed
 - 日报生成: DeepSeek V4 Pro
 - 战略增强: DeepSeek V4 Pro
 
