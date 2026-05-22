@@ -163,6 +163,10 @@ def main():
                 with open(pending_opencli, "r", encoding="utf-8") as f:
                     opencli_items = json.load(f)
                 logger.info(f"Loaded {len(opencli_items)} OpenCLI items from Win (万方/百度学术/小红书)")
+                # 关键：立即标记到 dedup cache，防止跨天重复
+                if opencli_items:
+                    dedup_cache.mark_batch_seen(opencli_items)
+                    logger.info(f"  OpenCLI 数据已标记到 dedup cache")
                 # 加载后清空，防止重复
                 os.remove(pending_opencli)
             except Exception as e:
