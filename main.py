@@ -138,6 +138,27 @@ def main():
         cache_path = os.path.join(cache_dir, "seen_items.json")
         dedup_cache = DedupCache(max_age_days=90)
         dedup_cache.load(cache_path)
+        # 也从 Obsidian Vault 路径加载缓存并合并（补充可能缺失的条目）
+        obsidian_vault = os.getenv("OBSIDIAN_VAULT_PATH")
+        if obsidian_vault:
+            vault_cache_path = os.path.join(obsidian_vault, "Research Feed", ".cache", "seen_items.json")
+            if vault_cache_path != cache_path and os.path.exists(vault_cache_path):
+                vault_cache = DedupCache(max_age_days=90)
+                vault_cache.load(vault_cache_path)
+                # 合并 vault 缓存到主缓存
+                for url, date in vault_cache.urls.items():
+                    if url not in dedup_cache.urls:
+                        dedup_cache.urls[url] = date
+                for doi, date in vault_cache.dois.items():
+                    if doi not in dedup_cache.dois:
+                        dedup_cache.dois[doi] = date
+                for h, date in vault_cache.title_hashes.items():
+                    if h not in dedup_cache.title_hashes:
+                        dedup_cache.title_hashes[h] = date
+                for kw, date in vault_cache.title_keywords.items():
+                    if kw not in dedup_cache.title_keywords:
+                        dedup_cache.title_keywords[kw] = date
+                logger.info(f"  Merged {len(vault_cache.urls)} URLs from vault cache")
         logger.info("[Phase 0] Cross-day dedup cache loaded")
 
         # ============================================================
@@ -383,6 +404,18 @@ def main():
         # ============================================================
         dedup_cache.save(cache_path)
         logger.info("[Phase 6.5] Cross-day dedup cache saved")
+
+        # 额外保存到 Obsidian Vault 路径（保证跨天去重缓存持久化）
+        obsidian_vault = os.getenv("OBSIDIAN_VAULT_PATH")
+        if obsidian_vault:
+            vault_cache_dir = os.path.join(obsidian_vault, output_folder or "Research Feed", ".cache")
+            vault_cache_path = os.path.join(vault_cache_dir, "seen_items.json")
+            if vault_cache_path != cache_path:
+                try:
+                    dedup_cache.save(vault_cache_path)
+                    logger.info(f"  Cache also saved to vault: {vault_cache_path}")
+                except Exception as e:
+                    logger.warning(f"  Failed to save cache to vault: {e}")
 
         # ============================================================
         # 完成

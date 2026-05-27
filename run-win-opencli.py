@@ -86,6 +86,26 @@ def main():
     cache_path = os.path.join(os.path.dirname(__file__), "output", ".cache", "seen_items.json")
     if os.path.exists(cache_path):
         cache.load(cache_path)
+    # 也尝试从 Obsidian Vault 缓存合并（如果本地有 vault 副本）
+    vault_path = os.getenv("OBSIDIAN_VAULT_PATH")
+    if vault_path:
+        vault_cache_path = os.path.join(vault_path, "Research Feed", ".cache", "seen_items.json")
+        if os.path.exists(vault_cache_path) and vault_cache_path != cache_path:
+            vault_cache = DedupCache(max_age_days=90)
+            vault_cache.load(vault_cache_path)
+            for url, date in vault_cache.urls.items():
+                if url not in cache.urls:
+                    cache.urls[url] = date
+            for doi, date in vault_cache.dois.items():
+                if doi not in cache.dois:
+                    cache.dois[doi] = date
+            for h, date in vault_cache.title_hashes.items():
+                if h not in cache.title_hashes:
+                    cache.title_hashes[h] = date
+            for kw, date in vault_cache.title_keywords.items():
+                if kw not in cache.title_keywords:
+                    cache.title_keywords[kw] = date
+            logger.info(f"  已合并 Vault 缓存: {len(vault_cache.urls)} URLs")
     fresh, _ = cache.filter_seen(items)
     logger.info(f"去重后: {len(fresh)} 条（共 {len(items)} 条）")
 
