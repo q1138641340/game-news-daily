@@ -115,7 +115,7 @@ Mac 端按需运行 `bash run-sync.sh`。
 ## 维护提醒
 
 - 微博 SUB cookie 有效期约 3-6 月，下次更新: 2026-08 前
-- 4 个学术 RSS 源可能失效 (Game Studies/DiGRA/SAGE)，不影响整体运行
+- 4 个学术 RSS 源已废弃 (Game Studies/DiGRA/SAGE)，已改用 CrossRef ISSN 直搜替代（见 config.yaml academic_journals）
 - Facebook 不可行 (需 Meta Developer App)
 - CNKI 知网被验证码堵死，用万方+百度学术替代
 - OpenCLI Chrome 扩展需保持连接（Win 端）

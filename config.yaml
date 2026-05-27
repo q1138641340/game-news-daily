@@ -140,6 +140,21 @@ academic_keywords:
   # CNKI 知网（需登录，当前因验证码不可用）
   cnki: []
 
+# 核心学术期刊（通过 CrossRef ISSN 直搜，替代失效的 RSS）
+# 每期刊拉取近90天最新论文，不依赖关键词匹配，论文100%覆盖
+academic_journals:
+  - name: "Games and Culture"
+    issn: "1555-4120"
+    publisher: "SAGE"
+    max_results: 10
+  - name: "Simulation & Gaming"
+    issn: "1046-8781"
+    publisher: "SAGE"
+    max_results: 10
+  - name: "Game Studies"
+    issn: "1604-7982"
+    max_results: 10
+
 # 小红书关键词（本地 OpenCLI 运行时生效）
 # 小红书搜索偏好生活化内容，建议用厂商名/具体游戏名/行业术语
 xiaohongshu_keywords:
@@ -209,12 +224,13 @@ opencli:
 # RSS 订阅源
 rss_feeds:
   # ========== 学术 - 人文艺术类（优先） ==========
-  - name: "Game Studies (丹麦)"
-    url: "https://gamestudies.org/160.xml"
-  - name: "Games and Culture (SAGE)"
-    url: "https://journals.sagepub.com/action/gsaRSS?journalName=Games+and+Culture"
-  - name: "Digital Games Research Association (DiGRA)"
-    url: "https://digra.org/publications/digra-journal/rss"
+  # 以下 RSS 源已失效，改用 CrossRef ISSN 直搜（见 academic_journals 配置）
+  # - name: "Game Studies (丹麦)"   → URL 失效 (404)
+  #   url: "https://gamestudies.org/160.xml"
+  # - name: "Games and Culture (SAGE)"  → Cloudflare 阻断
+  #   url: "https://journals.sagepub.com/action/gsaRSS?journalName=Games+and+Culture"
+  # - name: "Digital Games Research Association (DiGRA)"  → URL 失效 (404)
+  #   url: "https://digra.org/publications/digra-journal/rss"
 
   # ========== 人文艺术类 RSS（重点维护） ==========
   - name: "The New York Times - Arts"
@@ -245,8 +261,8 @@ rss_feeds:
   # ========== 新增学术期刊 RSS ==========
   - name: "Eludamos: Journal for Computer Game Culture"
     url: "https://eludamos.org/index.php/eludamos/gateway/plugin/WebFeedGatewayPlugin/atom"
-  - name: "Simulation & Gaming (SAGE)"
-    url: "https://journals.sagepub.com/action/gsaRSS?journalName=Simulation+%26+Gaming"
+  # - name: "Simulation & Gaming (SAGE)"  → 已改用 CrossRef ISSN 直搜
+  #   url: "https://journals.sagepub.com/action/gsaRSS?journalName=Simulation+%26+Gaming"
   - name: "Press Start"
     url: "https://press-start.gla.ac.uk/index.php/press-start/gateway/plugin/WebFeedGatewayPlugin/atom"
   - name: "Analog Game Studies"

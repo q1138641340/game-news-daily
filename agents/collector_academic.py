@@ -86,21 +86,32 @@ class AcademicCollectorAgent:
         logger.info(f"        Semantic Scholar 获取 {len(ss_papers)} 篇")
 
         # 步骤3: CrossRef（人文艺术 + 中文期刊）
-        logger.info("  [3/5] CrossRef 期刊（人文+中文）...")
+        logger.info("  [3/6] CrossRef 期刊（人文+中文）...")
         crossref_papers = self._collect_crossref(humanities_kw + zh_kw)
         all_papers.extend(crossref_papers)
         logger.info(f"        CrossRef 获取 {len(crossref_papers)} 篇")
 
-        # 步骤4: DBLP（计算机科学文献）
-        logger.info("  [4/5] DBLP 计算机科学...")
+        # 步骤4: 核心学术期刊（ISSN直搜）
+        journals_config = self.config.get("academic_journals", [])
+        if journals_config:
+            logger.info("  [4/6] 核心学术期刊 ISSN直搜...")
+            for journal in journals_config:
+                papers = self._collect_journal_by_issn(
+                    journal["issn"], journal["name"],
+                    max_results=journal.get("max_results", 10)
+                )
+                all_papers.extend(papers)
+
+        # 步骤5: DBLP（计算机科学文献）
+        logger.info("  [5/6] DBLP 计算机科学...")
         dblp_papers = self._collect_dblp()
         all_papers.extend(dblp_papers)
         logger.info(f"        DBLP 获取 {len(dblp_papers)} 篇")
 
-        # 步骤5: PubScholar（中文公益学术平台）
+        # 步骤6: PubScholar（中文公益学术平台）
         pubscholar_kw = academic_kw.get("pubscholar", [])
         if pubscholar_kw:
-            logger.info("  [5/8] PubScholar（中文公益学术）...")
+            logger.info("  [6/6] PubScholar（中文公益学术）...")
             pubscholar_papers = self._collect_pubscholar(pubscholar_kw)
             all_papers.extend(pubscholar_papers)
             logger.info(f"        PubScholar 获取 {len(pubscholar_papers)} 篇")
@@ -295,6 +306,73 @@ class AcademicCollectorAgent:
 
         return unique
 
+    def _parse_crossref_item(self, item: dict) -> dict:
+        """解析单个 CrossRef API 返回的论文条目"""
+        title_list = item.get("title", [])
+        title = title_list[0] if title_list else ""
+
+        authors = ", ".join(
+            f"{a.get('given', '')} {a.get('family', '')}".strip()
+            for a in (item.get("author") or [])[:5]
+        )
+
+        doi = item.get("DOI", "")
+        date_parts = item.get("published-print", item.get("published-online", {}))
+        date_parts = date_parts.get("date-parts", [[None]])
+        pub_date = ""
+        if date_parts and date_parts[0]:
+            parts = date_parts[0]
+            if len(parts) >= 3 and all(parts):
+                pub_date = f"{parts[0]}-{parts[1]:02d}-{parts[2]:02d}"
+            elif len(parts) >= 2 and all(parts):
+                pub_date = f"{parts[0]}-{parts[1]:02d}"
+
+        # 清理 JATS XML 标签
+        abstract_raw = item.get("abstract", "") or ""
+        abstract = abstract_raw.replace("<jats:p>", "").replace("</jats:p>", "")\
+            .replace("<jats:italic>", "").replace("</jats:italic>", "")\
+            .replace("<jats:title>", "").replace("</jats:title>", "")\
+            .replace("<jats:sec>", "").replace("</jats:sec>", "")
+
+        return {
+            "title": title,
+            "authors": authors,
+            "abstract": abstract[:500],
+            "url": f"https://doi.org/{doi}" if doi else "",
+            "doi": doi,
+            "pdf_url": "",
+            "venue": item.get("container-title", [""])[0] or "",
+            "published_date": pub_date,
+            "category": "pending"
+        }
+
+    def _collect_journal_by_issn(self, issn: str, journal_name: str, max_results: int = 10) -> list[dict]:
+        """按 ISSN 从 CrossRef 拉取特定期刊全部近期论文"""
+        all_papers = []
+        try:
+            url = "https://api.crossref.org/works"
+            params = {
+                "filter": f"issn:{issn},from-pub-date:{(datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')}",
+                "rows": max_results,
+                "sort": "published",
+                "order": "desc"
+            }
+            headers = {"User-Agent": "GameResearchBot/1.0 (mailto:research@example.com)"}
+            resp = self.session.get(url, params=params, headers=headers, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+
+            for item in data.get("message", {}).get("items", []):
+                paper = self._parse_crossref_item(item)
+                if paper["doi"] and paper["title"]:
+                    all_papers.append(paper)
+
+            logger.info(f"        [{journal_name}] ISSN直搜获取 {len(all_papers)} 篇")
+        except Exception as e:
+            logger.warning(f"        [{journal_name} ISSN直搜失败]: {e}")
+
+        return all_papers
+
     def _collect_crossref(self, queries: list[str] = None) -> list[dict]:
         """从 CrossRef 收集期刊论文（国际+国内）"""
         if queries is None:
@@ -322,43 +400,13 @@ class AcademicCollectorAgent:
                     "order": "desc",
                     "filter": f"from-pub-date:{(datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')}"
                 }
-                # CrossRef 要求 mailto 参数以获得更好的速率
                 headers = {"User-Agent": "GameResearchBot/1.0 (mailto:research@example.com)"}
                 resp = self.session.get(url, params=params, headers=headers, timeout=15)
                 resp.raise_for_status()
                 data = resp.json()
 
                 for item in data.get("message", {}).get("items", []):
-                    title_list = item.get("title", [])
-                    title = title_list[0] if title_list else ""
-
-                    authors = ", ".join(
-                        f"{a.get('given', '')} {a.get('family', '')}".strip()
-                        for a in (item.get("author") or [])[:5]
-                    )
-
-                    doi = item.get("DOI", "")
-                    date_parts = item.get("published-print", item.get("published-online", {}))
-                    date_parts = date_parts.get("date-parts", [[None]])
-                    pub_date = ""
-                    if date_parts and date_parts[0]:
-                        parts = date_parts[0]
-                        if len(parts) >= 3 and all(parts):
-                            pub_date = f"{parts[0]}-{parts[1]:02d}-{parts[2]:02d}"
-                        elif len(parts) >= 2 and all(parts):
-                            pub_date = f"{parts[0]}-{parts[1]:02d}"
-
-                    all_papers.append({
-                        "title": title,
-                        "authors": authors,
-                        "abstract": item.get("abstract", "").replace("<jats:p>", "").replace("</jats:p>", "").replace("<jats:italic>", "").replace("</jats:italic>", "")[:500],
-                        "url": f"https://doi.org/{doi}" if doi else "",
-                        "doi": doi,
-                        "pdf_url": "",
-                        "venue": item.get("container-title", [""])[0],
-                        "published_date": pub_date,
-                        "category": "pending"
-                    })
+                    all_papers.append(self._parse_crossref_item(item))
 
             except Exception as e:
                 logger.warning(f"        [CrossRef失败] {query}: {e}")
