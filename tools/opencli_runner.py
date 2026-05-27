@@ -204,6 +204,12 @@ class OpenCLIRunner:
             # with underscores, but Wanfang requires forward slashes
             if "wanfangdata.com.cn" in url:
                 url = re.sub(r'/(periodical|thesis|conference)_', r'/\1/', url)
+                # 会议和学位论文的详情页在 apps.wanfangdata.com.cn，期刊在 www
+                url = re.sub(
+                    r'https?://www\.wanfangdata\.com\.cn/(conference|thesis)/',
+                    r'https://apps.wanfangdata.com.cn/\1/',
+                    url
+                )
 
             # 学术来源 → paper 格式
             if source in ("万方", "百度学术", "知网"):
