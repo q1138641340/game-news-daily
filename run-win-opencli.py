@@ -67,11 +67,26 @@ def main():
             logger.warning(f"  [小红书失败] '{kw}': {e}")
             total_errors += 1
 
+    # ---- 微博 ----
+    weibo_uids = config.get("weibo_uids", [])
+    if weibo_uids:
+        logger.info(f"  [微博] 开始采集 {len(weibo_uids)} 个账号...")
+        for uid in weibo_uids:
+            try:
+                results = runner.search_weibo_user(uid, max_results=5)
+                items.extend(results)
+                if results: logger.info(f"    [微博] uid={uid}: {len(results)} 条")
+                time.sleep(5)
+            except Exception as e:
+                logger.warning(f"  [微博失败] uid={uid}: {e}")
+                total_errors += 1
+
     # All sources failed → exit 3 (distinct from "nothing found")
     total_keywords = (
         len(config.get("academic_keywords", {}).get("wanfang", [])) +
         len(config.get("academic_keywords", {}).get("baidu_scholar", [])) +
-        len(config.get("xiaohongshu_keywords", []))
+        len(config.get("xiaohongshu_keywords", [])) +
+        len(config.get("weibo_uids", []))
     )
     if total_keywords > 0 and total_errors >= total_keywords:
         logger.error(f"所有 {total_keywords} 个源均采集失败，退出")

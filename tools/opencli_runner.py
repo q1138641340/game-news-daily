@@ -151,6 +151,34 @@ class OpenCLIRunner:
         """小红书关键词搜索（需登录）"""
         return self._search("xiaohongshu", query, max_results, source="小红书")
 
+    def search_weibo_user(self, uid: str, max_results: int = 5) -> list[dict]:
+        """微博用户 Timeline 采集（通过 UID）"""
+        return self._search_weibo_user(uid, max_results, source="微博")
+
+    def _search_weibo_user(self, uid: str, max_results: int, source: str) -> list[dict]:
+        """内部方法：抓取指定微博用户的 Timeline"""
+        if not self.is_available():
+            return []
+
+        try:
+            result = self._run_cmd([
+                "weibo", "user", uid,
+                "--limit", str(max_results), "-f", "json"
+            ])
+            if result.returncode != 0:
+                logger.warning(f"  [{source}] 命令失败: {result.stderr[:100]}")
+                return []
+
+            items = self._parse_json_output(result.stdout, source)
+            logger.info(f"    [{source}] uid={uid}: {len(items)} 条")
+            return items
+
+        except subprocess.TimeoutExpired:
+            logger.warning(f"  [{source}] 超时: uid={uid}")
+        except OSError as e:
+            logger.warning(f"  [{source}] 系统错误: {e}")
+        return []
+
     # ---- 内部方法 ----
 
     def _search(self, adapter: str, query: str, max_results: int, source: str) -> list[dict]:
