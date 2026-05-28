@@ -3,7 +3,7 @@
 负责评估内容与用户研究兴趣的相关性
 """
 
-from tools.llm import get_review_minimax
+from tools.llm import get_review_kimi
 from tools.json_parser import parse_json
 import logging
 
@@ -145,7 +145,7 @@ class RelevanceReviewerAgent:
 
     def __init__(self, config: dict):
         self.config = config
-        self.llm, self.model = get_review_minimax()  # MiniMax M2.7 审查
+        self.llm, self.model = get_review_kimi()  # Kimi-2.5 审查
         self.max_cs_graphics = config.get("workflow", {}).get("review", {}).get("max_cs_graphics_per_batch", 3)
 
     def run(self, items: list[dict]) -> list[dict]:
