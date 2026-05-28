@@ -278,13 +278,13 @@ rss_feeds:
   - name: "PC Gamer"
     url: "https://www.pcgamer.com/rss/"
   - name: "IGN"
-    url: "https://www.ign.com/rss"
+    url: "https://feeds.feedburner.com/ign/all"
 
   # ========== 新增行业来源 RSS ==========
   - name: "Game Developer (ex-Gamasutra)"
     url: "https://www.gamedeveloper.com/rss"
   - name: "GDC (YouTube Channel)"
-    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC0JB7TSe49lg4u5nf16n1NA"
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC83Q_QMh_3OTMY64VTHsh6Q"
 
   # ========== 社交媒体 RSS（Reddit） ==========
   - name: "Reddit r/gamedev"
