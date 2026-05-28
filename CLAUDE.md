@@ -74,7 +74,7 @@ Phase 6: 保存 + 标记去重缓存
 
 | 服务 | URL | 用途 | Cookie |
 |------|-----|------|--------|
-| Weibo RSS Bridge | weibo-rss-bridge.vercel.app | 微博→RSS | SUB (2026-05-06 设置) |
+| Weibo RSS Bridge | 已下线 | 微博→RSS（已迁移至 Win OpenCLI） | — |
 | Nitter | nitter.net | X/Twitter→RSS | 无需 |
 
 ## OpenCLI 集成（需 Chrome 扩展，仅 Win 端）
@@ -114,7 +114,7 @@ Mac 端按需运行 `bash run-sync.sh`。
 
 ## 维护提醒
 
-- 微博 SUB cookie 有效期约 3-6 月，下次更新: 2026-08 前
+- 微博内容已迁移至 Win OpenCLI 采集，不再依赖 RSS Bridge
 - 4 个学术 RSS 源已废弃 (Game Studies/DiGRA/SAGE)，已改用 CrossRef ISSN 直搜替代（见 config.yaml academic_journals）
 - Facebook 不可行 (需 Meta Developer App)
 - CNKI 知网被验证码堵死，用万方+百度学术替代

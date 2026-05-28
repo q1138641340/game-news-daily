@@ -298,71 +298,17 @@ rss_feeds:
   - name: "Reddit r/GameDesign"
     url: "https://www.reddit.com/r/GameDesign/.rss"
 
-  # ========== 社交媒体 RSS（微博: 游戏厂商） ==========
-  # 自建 Weibo RSS Bridge 部署于 Vercel
-  - name: "微博 - 腾讯游戏"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/3604205173"
-  - name: "微博 - 网易游戏"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1502592662"
-  - name: "微博 - 米哈游miHoYo"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/6415164493"
-  - name: "微博 - 莉莉丝游戏"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/5632612496"
-  - name: "微博 - 新浪游戏"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/517656716"
-
-  - name: "微博 - 游研社"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2634877355"
-  - name: "微博 - 天美工作室群"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/5661907178"
-  - name: "微博 - 鹰角网络"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/7461423907"
-  - name: "微博 - 宇树科技"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1818617132"
-  - name: "微博 - 天工机器人"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/7920364352"
-  - name: "微博 - 腾讯公司"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1846456085"
-  - name: "微博 - 微软中国"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2381785464"
-  - name: "微博 - HTC VIVE"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/5785544876"
-  - name: "微博 - NVIDIA英伟达"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/5943087025"
-  - name: "微博 - 2KGames中国"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2076215147"
-  - name: "微博 - 游民星空"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1969176463"
-  - name: "微博 - 3DMGAME"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2163365571"
-  - name: "微博 - 游侠网"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1893905030"
-  - name: "微博 - IGN编辑部"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/7494874950"
-  - name: "微博 - UBISOFT育碧"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2808306097"
-  - name: "微博 - 雷军"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1749127163"
-  - name: "微博 - 小米公司"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1771925961"
-  - name: "微博 - 余承东"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1100856704"
-  - name: "微博 - 华为终端"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1839167003"
-  - name: "微博 - 中国新闻网"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1784473157"
-  - name: "微博 - 新京报"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1644114654"
-  - name: "微博 - 三联生活周刊"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1191965271"
-  - name: "微博 - 人民日报"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2803301701"
-  - name: "微博 - 央视新闻"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/2656274875"
-  - name: "微博 - 李开复"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1197161814"
-  - name: "微博 - 交个朋友直播间"
-    url: "https://weibo-rss-bridge.vercel.app/api/weibo/user/1640571365"
+  # ========== 社交媒体 RSS（微博: 已迁移至 Win OpenCLI） ==========
+  # 自建 Weibo RSS Bridge（Vercel）已下线，微博内容由 Win 端 OpenCLI 采集
+  # 保留原 UID 列表备查：
+  # 3604205173=腾讯游戏, 1502592662=网易游戏, 6415164493=米哈游, 5632612496=莉莉丝
+  # 517656716=新浪游戏, 2634877355=游研社, 5661907178=天美, 7461423907=鹰角
+  # 1818617132=宇树科技, 7920364352=天工机器人, 1846456085=腾讯公司, 2381785464=微软中国
+  # 5785544876=HTC VIVE, 5943087025=NVIDIA, 2076215147=2KGames, 1969176463=游民星空
+  # 2163365571=3DMGAME, 1893905030=游侠网, 7494874950=IGN编辑部, 2808306097=育碧
+  # 1749127163=雷军, 1771925961=小米, 1100856704=余承东, 1839167003=华为终端
+  # 1784473157=中国新闻网, 1644114654=新京报, 1191965271=三联, 2803301701=人民日报
+  # 2656274875=央视新闻, 1197161814=李开复, 1640571365=交个朋友
 
   # ========== 社交媒体 RSS（Nitter: X/Twitter） ==========
   # Nitter: 开源 Twitter 前端，生成 RSS
