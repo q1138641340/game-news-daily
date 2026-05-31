@@ -274,8 +274,8 @@ def main():
             "models": {
                 "收集清洗": {"name": "MiniMax M2.7", "provider": "MiniMax", "status": "✅"},
                 "预处理": {"name": "DeepSeek Flash", "provider": "DeepSeek", "status": "✅"},
-                "质量审查": {"name": "MiniMax M2.7", "provider": "MiniMax", "status": "✅"},
-                "相关性审查": {"name": "MiniMax M2.7", "provider": "MiniMax", "status": "✅"},
+                "质量审查": {"name": "DeepSeek V4 Pro", "provider": "DeepSeek", "status": "✅"},
+                "相关性审查": {"name": "DeepSeek V4 Pro", "provider": "DeepSeek", "status": "✅"},
                 "日报生成": {"name": "DeepSeek V4 Pro", "provider": "DeepSeek", "status": "✅"},
                 "战略增强": {"name": "DeepSeek V4 Pro", "provider": "DeepSeek", "status": "✅"},
             },
