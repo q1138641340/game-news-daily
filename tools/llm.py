@@ -20,7 +20,7 @@ load_dotenv()
 # 预配置的模型
 class Models:
     # 收集阶段 (快速模型 - MiniMax + DeepSeek Flash)
-    COLLECT_MINIMAX = "MiniMax-M2.7-highspeed"
+    COLLECT_MINIMAX = "MiniMax-M2.7"
     COLLECT_DEEPSEEK_FLASH = "deepseek-v4-flash"
 
     # 审查阶段 (高精度模型 - Kimi)
