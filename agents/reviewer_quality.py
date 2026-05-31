@@ -3,7 +3,7 @@
 负责过滤低质量内容：广告、垃圾信息、信息不完整等
 """
 
-from tools.llm import get_review_minimax
+from tools.llm import get_review_deepseek
 from tools.json_parser import parse_json
 import logging
 
@@ -74,7 +74,7 @@ hallucination_risk 取值：
 
     def __init__(self, config: dict):
         self.config = config
-        self.llm, self.model = get_review_minimax()  # MiniMax M2.7 审查
+        self.llm, self.model = get_review_deepseek()  # DeepSeek V4 Pro 审查
 
     def run(self, items: list[dict]) -> list[dict]:
         """

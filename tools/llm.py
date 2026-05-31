@@ -162,9 +162,15 @@ def get_review_minimax() -> tuple[LLMClient, str]:
 
 
 def get_review_kimi() -> tuple[LLMClient, str]:
-    """审查阶段 Kimi-2.5 客户端（已废弃，改用 get_review_minimax）"""
+    """审查阶段 Kimi-2.5 客户端（已废弃，改用 get_review_deepseek）"""
     client = LLMClient(provider="kimi")
     return client, Models.REVIEW_KIMI
+
+
+def get_review_deepseek() -> tuple[LLMClient, str]:
+    """审查阶段 DeepSeek V4 Pro 客户端（替代 MiniMax，Token Plan 续费后额度异常）"""
+    client = LLMClient(provider="deepseek")
+    return client, Models.FORMAT_DEEPSEEK_PRO
 
 
 def get_format_deepseek() -> tuple[LLMClient, str]:
