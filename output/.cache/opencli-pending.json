@@ -10098,5 +10098,339 @@
     "category": "social-media",
     "likes": "427",
     "author": "Karly"
+  },
+  {
+    "title": "基于J2ME技术的手机网络游戏研究与开发",
+    "authors": "期刊, 朱全银，, 朱全银, 章慧，, 章慧, 孙文杰, 孙文杰",
+    "abstract": "",
+    "url": "https://xueshu.baidu.com/usercenter/paper/show?paperid=8adb17126de1775215230c2bb9cffe21&site=xueshu_se",
+    "doi": "",
+    "venue": "计算机工程与应用",
+    "published_date": "2008",
+    "category": "chinese-academic",
+    "source": "百度学术",
+    "cited": "11"
+  },
+  {
+    "title": "电脑游戏:文本,叙事与游戏",
+    "authors": "图书, 戴安娜・卡尔...著DIANECARR, 戴安娜・卡尔...著DIANECARR, 北京大学出版社, 北京大学出版社",
+    "abstract": "",
+    "url": "https://xueshu.baidu.com/usercenter/paper/show?paperid=2c612450963819f5c2f06e555b60f1ab&site=xueshu_se",
+    "doi": "",
+    "venue": "",
+    "published_date": "2015",
+    "category": "chinese-academic",
+    "source": "百度学术",
+    "cited": "3"
+  },
+  {
+    "title": "恭喜你被分到桑多涅",
+    "summary": "",
+    "source": "小红书 (银子.#)",
+    "url": "https://www.xiaohongshu.com/search_result/6a506670000000000f02a224?xsec_token=ABQabZWd8uExMCtZE2d4TVscyYZivex60XzCquucrnQFI=&xsec_source=",
+    "date": "2026-07-10",
+    "category": "social-media",
+    "likes": "118",
+    "author": "银子.#"
+  },
+  {
+    "title": "发了又不认😢",
+    "summary": "",
+    "source": "小红书 (不定时搬石3号机)",
+    "url": "https://www.xiaohongshu.com/search_result/6a43bc4b0000000021009904?xsec_token=ABldGEFF2M9CLWaZd3WNdI4lE3-eZCBhSwixnp1RvY3XA=&xsec_source=",
+    "date": "2026-06-30",
+    "category": "social-media",
+    "likes": "553",
+    "author": "不定时搬石3号机"
+  },
+  {
+    "title": "为什么库洛对待玩家也很认真，游戏却不及米",
+    "summary": "",
+    "source": "小红书 (大厂talk)",
+    "url": "https://www.xiaohongshu.com/search_result/6a44e17f000000000702552a?xsec_token=AB9oEJcDU1sjEFrFb2x8-dsFAb7fTlrNayhEelgJymUzc=&xsec_source=",
+    "date": "2026-07-01",
+    "category": "social-media",
+    "likes": "163",
+    "author": "大厂talk"
+  },
+  {
+    "title": "致敬最听取玩家意见的公司",
+    "summary": "",
+    "source": "小红书 (菠萝小猫)",
+    "url": "https://www.xiaohongshu.com/search_result/6a4344dd000000000f0171ef?xsec_token=ABldGEFF2M9CLWaZd3WNdI4igooo2WRbvaGtBG-u_Losc=&xsec_source=",
+    "date": "2026-06-30",
+    "category": "social-media",
+    "likes": "15",
+    "author": "菠萝小猫"
+  },
+  {
+    "title": "恋与制作人公司14布局参考",
+    "summary": "",
+    "source": "小红书 (过的漂漂亮亮的小玉笛)",
+    "url": "https://www.xiaohongshu.com/search_result/695b09ef000000001e00d1fa?xsec_token=ABDXZMMfdHuAWeSzGbCa_9yF1usj-H44fDxIf3pKzmxbE=&xsec_source=",
+    "date": "2026-01-05",
+    "category": "social-media",
+    "likes": "2021",
+    "author": "过的漂漂亮亮的小玉笛"
+  },
+  {
+    "title": "谁懂 好适合做一场社会学研究",
+    "summary": "",
+    "source": "小红书 (LucidDream_)",
+    "url": "https://www.xiaohongshu.com/search_result/6a489909000000001101b29b?xsec_token=ABpUfHoguaKe08HjIi71_OX_V6qi1UIK6m09qtBUYqi6A=&xsec_source=",
+    "date": "2026-07-04",
+    "category": "social-media",
+    "likes": "1426",
+    "author": "LucidDream_"
+  },
+  {
+    "title": "外网大袜子承认自己喜欢的是中国人难吗？",
+    "summary": "",
+    "source": "小红书 (心碎社畜)",
+    "url": "https://www.xiaohongshu.com/search_result/67f4feab000000001b0272fa?xsec_token=ABAy_wGgzvKqflLveWzu2Ws19mZztJKUl4-kN4N_CO0go=&xsec_source=",
+    "date": "2025-04-08",
+    "category": "social-media",
+    "likes": "9449",
+    "author": "心碎社畜"
+  },
+  {
+    "title": "这是在干嘛呀",
+    "summary": "",
+    "source": "小红书 (可怜的小红薯)",
+    "url": "https://www.xiaohongshu.com/search_result/69df6eef000000001e00ceec?xsec_token=ABDPcXiTlofKsgXXbtJZqFmYafUS2uGnKm--hFfMnRtCI=&xsec_source=",
+    "date": "2026-04-15",
+    "category": "social-media",
+    "likes": "605",
+    "author": "可怜的小红薯"
+  },
+  {
+    "title": "一句“辣评”国内游戏大厂👀哪家让你破防",
+    "summary": "",
+    "source": "小红书 (职跃动力)",
+    "url": "https://www.xiaohongshu.com/search_result/693155510000000019026e12?xsec_token=ABqLPzvjcRmECBG9lQv1zbJj1OiEVFPvhVcRmY1Hfawlg=&xsec_source=",
+    "date": "2025-12-04",
+    "category": "social-media",
+    "likes": "58",
+    "author": "职跃动力"
+  },
+  {
+    "title": "小莉招聘 | 7月热招岗位新鲜出炉！",
+    "summary": "",
+    "source": "小红书 (莉莉丝游戏)",
+    "url": "https://www.xiaohongshu.com/search_result/6a44f9120000000022015dfa?xsec_token=AB9oEJcDU1sjEFrFb2x8-dsC9YchXfd4h3pcY-JTXdi_I=&xsec_source=",
+    "date": "2026-07-01",
+    "category": "social-media",
+    "likes": "74",
+    "author": "莉莉丝游戏"
+  },
+  {
+    "title": "小岛新作《OD》太像P.T.引发热议",
+    "summary": "",
+    "source": "小红书 (momo)",
+    "url": "https://www.xiaohongshu.com/search_result/68d27a43000000001301af9f?xsec_token=ABTMQkIVvdamgUwCY5eXYWW7oIUOHP7sjzbK2GkC9S_XI=&xsec_source=",
+    "date": "2025-09-23",
+    "category": "social-media",
+    "likes": "19",
+    "author": "momo"
+  },
+  {
+    "title": "大疆技术牛人杀入AI编织机米哈游狂砸上亿元",
+    "summary": "",
+    "source": "小红书 (AI智能情报局)",
+    "url": "https://www.xiaohongshu.com/search_result/6a4cda6c000000000f01f8be?xsec_token=ABlaNU2BdC8WNL-EKU4XfqThcT8E_F4TaLVoTlZaH5Pb8=&xsec_source=",
+    "date": "2026-07-07",
+    "category": "social-media",
+    "likes": "3179",
+    "author": "AI智能情报局"
+  },
+  {
+    "title": "受够了！那些烂大街的VibeCoding项目....",
+    "summary": "",
+    "source": "小红书 (💡马格里布)",
+    "url": "https://www.xiaohongshu.com/search_result/6a2d337300000000220167d8?xsec_token=ABciw1GsdWrehBekM91P2AlS_katB6UberF8eftRN-gmk=&xsec_source=",
+    "date": "2026-06-13",
+    "category": "social-media",
+    "likes": "50",
+    "author": "💡马格里布"
+  },
+  {
+    "title": "flash停运！童年小游戏成为时代的眼泪？",
+    "summary": "",
+    "source": "小红书 (贴吧大聪明)",
+    "url": "https://www.xiaohongshu.com/search_result/69631bd5000000002203ac7f?xsec_token=ABZH26PBHORwnufKseHCJvMkXu6pD-ZB3XXyCCEz7sdNw=&xsec_source=",
+    "date": "2026-01-11",
+    "category": "social-media",
+    "likes": "7970",
+    "author": "贴吧大聪明"
+  },
+  {
+    "title": "独游发售宣传经验分享",
+    "summary": "",
+    "source": "小红书 (TrucyAkina)",
+    "url": "https://www.xiaohongshu.com/search_result/6a336200000000000f02ad8f?xsec_token=ABSWhnuOy3jPeh3-74ct4PwnmlzKhvi2dHhFe8Zb9vjY4=&xsec_source=",
+    "date": "2026-06-18",
+    "category": "social-media",
+    "likes": "1044",
+    "author": "TrucyAkina"
+  },
+  {
+    "title": "女性向赛道的“重磅选手”，又有新进展",
+    "summary": "",
+    "source": "小红书 (竞核)",
+    "url": "https://www.xiaohongshu.com/search_result/6a478bd20000000008030eb8?xsec_token=ABVS3U3xp-mtmxbEH8yL8fTg54I7V8g7WVCKYPNHQvwS0=&xsec_source=",
+    "date": "2026-07-03",
+    "category": "social-media",
+    "likes": "454",
+    "author": "竞核"
+  },
+  {
+    "title": "为什么越来越多游戏开始众筹了？",
+    "summary": "",
+    "source": "小红书 (游戏茶馆)",
+    "url": "https://www.xiaohongshu.com/search_result/698167a3000000002800bccf?xsec_token=AB4DhEwpWfd19fc1Oz12TXcyUk96UpoUWW5_8I2anb2tI=&xsec_source=",
+    "date": "2026-02-03",
+    "category": "social-media",
+    "likes": "143",
+    "author": "游戏茶馆"
+  },
+  {
+    "title": "独立游戏血本无归，要游是本了",
+    "summary": "",
+    "source": "小红书 (一只肥猫)",
+    "url": "https://www.xiaohongshu.com/search_result/6a45e66d000000001700a529?xsec_token=ABgQPspgrqktlDnCOIjIiKDE1QSlnbmGyl0V0r99lPu5c=&xsec_source=",
+    "date": "2026-07-02",
+    "category": "social-media",
+    "likes": "466",
+    "author": "一只肥猫"
+  },
+  {
+    "title": "epic免费入，玩完倒欠一千补课费",
+    "summary": "",
+    "source": "小红书 (而少)",
+    "url": "https://www.xiaohongshu.com/search_result/6980c62e000000002203b434?xsec_token=ABJla4UBt88a_tplYXHPdQ9_hNf9McuTbXuOYW7iHqhRY=&xsec_source=",
+    "date": "2026-02-02",
+    "category": "social-media",
+    "likes": "709",
+    "author": "而少"
+  },
+  {
+    "title": "什么？Deltarune设计师帮我看作品集？",
+    "summary": "",
+    "source": "小红书 (NEV獭)",
+    "url": "https://www.xiaohongshu.com/search_result/6a450d1e000000000e038400?xsec_token=ABgQPspgrqktlDnCOIjIiKDEi3SRXRHo3N8bLZf9f2kVM=&xsec_source=",
+    "date": "2026-07-01",
+    "category": "social-media",
+    "likes": "459",
+    "author": "NEV獭"
+  },
+  {
+    "title": "黑神话悟空取景地之五台山",
+    "summary": "",
+    "source": "小红书 (巴巴波诶)",
+    "url": "https://www.xiaohongshu.com/search_result/6a4fd7c1000000001503f793?xsec_token=ABWIND99wTGlWpsIEa4pK5iZbo0SNVpj8bku316JXWT0g=&xsec_source=",
+    "date": "2026-07-10",
+    "category": "social-media",
+    "likes": "2",
+    "author": "巴巴波诶"
+  },
+  {
+    "title": "黑神话圣地巡游——虚实中的魅力蔚县",
+    "summary": "",
+    "source": "小红书 (朝夕可乐)",
+    "url": "https://www.xiaohongshu.com/search_result/6a4fc2f6000000001603e2be?xsec_token=ABWIND99wTGlWpsIEa4pK5idL-pmU4P3ER7vWyc5GiftA=&xsec_source=",
+    "date": "2026-07-09",
+    "category": "social-media",
+    "likes": "5",
+    "author": "朝夕可乐"
+  },
+  {
+    "title": "【黑神话悟空】这是一集无聊的跑图",
+    "summary": "",
+    "source": "小红书 (秋澜)",
+    "url": "https://www.xiaohongshu.com/search_result/6a4ee217000000001702cfe6?xsec_token=ABwdBxJpqcy221WA971QNQS6uzM5vhqiitFPjoy-nNqbE=&xsec_source=",
+    "date": "2026-07-09",
+    "category": "social-media",
+    "likes": "7",
+    "author": "秋澜"
+  },
+  {
+    "title": "黑悟空如何快速刷出虎筋绦子",
+    "summary": "",
+    "source": "小红书 (拉黑代表你真破防了)",
+    "url": "https://www.xiaohongshu.com/search_result/6a48c780000000000f02b7f6?xsec_token=ABpUfHoguaKe08HjIi71_OX6kVKmXWQq8LFwOBrgFi2QY=&xsec_source=",
+    "date": "2026-07-04",
+    "category": "social-media",
+    "likes": "3",
+    "author": "拉黑代表你真破防了"
+  },
+  {
+    "title": "香香出多了飞升eva官委了？",
+    "summary": "",
+    "source": "小红书 (一只口羊)",
+    "url": "https://www.xiaohongshu.com/search_result/688f24f40000000023028ba2?xsec_token=AB1App_RMRM381i3rhVcRNIrEQvx2UJbKll6bA-fc2b50=&xsec_source=",
+    "date": "2025-08-03",
+    "category": "social-media",
+    "likes": "615",
+    "author": "一只口羊"
+  },
+  {
+    "title": "【丁贝莉】回忆杀！丁贝莉，我的初代女神",
+    "summary": "",
+    "source": "小红书 (星颜博览馆)",
+    "url": "https://www.xiaohongshu.com/search_result/67a9ee1e000000002900ded1?xsec_token=ABNBa_hqO3sh-zgJmFK_USGYIetX8mRyh2bthpZNdjIdY=&xsec_source=",
+    "date": "2025-02-10",
+    "category": "social-media",
+    "likes": "1949",
+    "author": "星颜博览馆"
+  },
+  {
+    "title": "ChinaJoy2026｜我们把游戏社区搬到现场！",
+    "summary": "",
+    "source": "小红书 (游程)",
+    "url": "https://www.xiaohongshu.com/search_result/6a4b58560000000008027a6a?xsec_token=ABi7wYVnyzNRNyLKsgJsVC15gME-OqSNBwOTumFy2g1z4=&xsec_source=",
+    "date": "2026-07-06",
+    "category": "social-media",
+    "likes": "23",
+    "author": "游程"
+  },
+  {
+    "title": "资料｜黑神话悟空合作的公司（中）",
+    "summary": "",
+    "source": "小红书 (星小白的广告疯人院)",
+    "url": "https://www.xiaohongshu.com/search_result/66f5439a000000002c02898f?xsec_token=ABmVSsZnnMng6uUfzV18q6TCdxLsa06jfd8zBIxX5d2-Q=&xsec_source=",
+    "date": "2024-09-26",
+    "category": "social-media",
+    "likes": "1153",
+    "author": "星小白的广告疯人院"
+  },
+  {
+    "title": "有史以来，第一次被纳入五年规划",
+    "summary": "",
+    "source": "小红书 (一点Game游戏圈)",
+    "url": "https://www.xiaohongshu.com/search_result/69b61ce6000000001e00e748?xsec_token=AB6Otf60wZ_1zPukNEAPTzr0Hk5KjROlEtN5WdDLkeGes=&xsec_source=",
+    "date": "2026-03-15",
+    "category": "social-media",
+    "likes": "295",
+    "author": "一点Game游戏圈"
+  },
+  {
+    "title": "游戏科学冯骥开启招聘攻势，网友嫌工资低",
+    "summary": "",
+    "source": "小红书 (尝一点蜜糖)",
+    "url": "https://www.xiaohongshu.com/search_result/68a91afd000000001b0360dc?xsec_token=ABAJlyfRVK-biFB7YftV5F4oYFvXJowhSDOX4HuS9Ot_Y=&xsec_source=",
+    "date": "2025-08-23",
+    "category": "social-media",
+    "likes": "223",
+    "author": "尝一点蜜糖"
+  },
+  {
+    "title": "羊了个羊，闷声发大财",
+    "summary": "",
+    "source": "小红书 (supermao)",
+    "url": "https://www.xiaohongshu.com/search_result/6936df56000000001f005038?xsec_token=ABTZ_url68e3n2d2mfrGfZepSqh0qYllUN7lJBKyBXeMc=&xsec_source=",
+    "date": "2025-12-08",
+    "category": "social-media",
+    "likes": "57",
+    "author": "supermao"
   }
 ]
